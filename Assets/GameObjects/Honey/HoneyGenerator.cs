@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -6,20 +7,73 @@ public class HoneyGenerator : MonoBehaviour
 {
     private Vector2 xRange = new(-50f, 50f);
     private Vector2 yRange = new(0f, 50f);
+    private GameObject chunkHolder;
 
+    [Header("Parameters")]
     public Vector2 zRange = new(-10f, 10f);
 
-    [Tooltip("Below this y value, individual voxels for honey will be culled.")]
     [Range(0f, 50f)]
-    public float yCutoff = 5f;
+    public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
 
-    void OnEnable()
+    private Vector3 chunkSize = new(20, 10, 20);
+    private List<HoneyChunk> chunks;
+
+    void Awake()
     {
-        GenerateStaticHoneyMesh();
+        GenerateStaticHoneyMesh(); // for visual purposes in editor
+
+        if (Application.isPlaying)
+        {
+            chunks = new List<HoneyChunk>();
+
+            var oldChunks = FindObjectsByType<HoneyChunk>(FindObjectsSortMode.None);
+
+            for (int i = 0; i < oldChunks.Length; i++)
+            {
+                Destroy(oldChunks[i].gameObject);
+            }
+        }
+    }
+
+    void Start()
+    {
+        if (Application.isPlaying)
+        {
+            GetOrSetChunkHolder();
+
+            for (float x = xRange[0]; x < xRange[1]; x += chunkSize[0])
+            {
+                for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
+                {
+                    float y = yCutoff; // only need one row of y.
+                    CreateChunk(new Vector3(x, y, z));
+                }
+            }
+        }
     }
 
     // Update is called once per frame
     void Update() { }
+
+    private void CreateChunk(Vector3 minBound)
+    {
+        Vector3 maxBound = new(
+            Mathf.Min(minBound[0] + chunkSize[0], xRange[1]),
+            Mathf.Min(minBound[1] + chunkSize[1], yRange[1]),
+            Mathf.Min(minBound[2] + chunkSize[2], yRange[1])
+        );
+
+        Bounds newChunkBounds = new();
+        newChunkBounds.SetMinMax(minBound, maxBound);
+
+        GameObject _newChunkObj = new($"Chunk {newChunkBounds.center}");
+
+        _newChunkObj.transform.parent = chunkHolder.transform;
+        HoneyChunk newChunk = _newChunkObj.AddComponent<HoneyChunk>();
+        newChunk.bounds = newChunkBounds;
+
+        chunks.Add(newChunk);
+    }
 
     private void GenerateStaticHoneyMesh()
     {
@@ -87,5 +141,20 @@ public class HoneyGenerator : MonoBehaviour
         filter.mesh = mesh;
 
         mesh.RecalculateNormals();
+    }
+
+    private void GetOrSetChunkHolder()
+    {
+        if (chunkHolder == null)
+        {
+            if (GameObject.Find("ChunkHolder"))
+            {
+                chunkHolder = GameObject.Find("ChunkHolder");
+            }
+            else
+            {
+                chunkHolder = new GameObject("ChunkHolder");
+            }
+        }
     }
 }
