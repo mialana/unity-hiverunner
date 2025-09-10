@@ -60,11 +60,23 @@
         "*.asset": "yaml",
         "*.meta": "yaml",
         "*.prefab": "yaml",
-        "*.unity": "yaml",
+        "*.unity": "yaml"
     },
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
-        "*.sln": "*.csproj",
+        "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "cis5680-project2.sln"
+    "dotnet.defaultSolution": "cis5680-project2.sln",
+    "editor.inlineSuggest.enabled": false,
+    "[csharp]": {
+        "editor.defaultFormatter": "csharpier.csharpier-vscode"
+    },
+    "[xml]": {
+        "editor.defaultFormatter": "csharpier.csharpier-vscode"
+    },
+    "csharp.format.enable": true,
+    "editor.formatOnSave": true,
+    "csharpier.dev.customPath": "/Users/Dev/.dotnet/tools",
+    "csharpier.enableDebugLogs": true,
+    "csharpier.dev.useCustomPath": true
 }
