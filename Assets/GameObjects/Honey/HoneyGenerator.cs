@@ -7,9 +7,6 @@ public class HoneyGenerator : MonoBehaviour
 {
     private Vector2 xRange = new(-50f, 50f);
     private Vector2 yRange = new(0f, 50f);
-    private GameObject chunkHolder;
-
-    [Header("Parameters")]
     public Vector2 zRange = new(-10f, 10f);
 
     [Range(0f, 50f)]
@@ -18,8 +15,13 @@ public class HoneyGenerator : MonoBehaviour
     private Vector3 chunkSize = new(20, 10, 20);
     private List<HoneyChunk> chunks;
 
-    private float nextActionTime = 0.0f;
-    public float period = 3f;
+    private float nextUpdateTime = 0.0f;
+    public float updateInterval = 3f;
+
+    public BaseDensityGenerator densityGenerator;
+    public GameObject chunkHolder;
+
+    private ComputeBuffer pointsBuffer;
 
     void Awake()
     {
@@ -29,11 +31,29 @@ public class HoneyGenerator : MonoBehaviour
         {
             chunks = new List<HoneyChunk>();
 
-            var oldChunks = FindObjectsByType<HoneyChunk>(FindObjectsSortMode.None);
+            DestroyAllChunks();
+        }
+    }
 
-            for (int i = 0; i < oldChunks.Length; i++)
+    // find all HoneyChunk objects in scene and destroy
+    private void DestroyAllChunks()
+    {
+        var oldChunks = FindObjectsByType<HoneyChunk>(FindObjectsSortMode.None);
+
+        for (int i = 0; i < oldChunks.Length; i++)
+        {
+            Destroy(oldChunks[i].gameObject);
+        }
+    }
+
+    private void CreateAllChunks()
+    {
+        for (float x = xRange[0]; x < xRange[1]; x += chunkSize[0])
+        {
+            for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
             {
-                Destroy(oldChunks[i].gameObject);
+                float y = yCutoff; // only need one row of y.
+                CreateChunk(new Vector3(x, y, z));
             }
         }
     }
@@ -42,16 +62,7 @@ public class HoneyGenerator : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            GetOrSetChunkHolder();
-
-            for (float x = xRange[0]; x < xRange[1]; x += chunkSize[0])
-            {
-                for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
-                {
-                    float y = yCutoff; // only need one row of y.
-                    CreateChunk(new Vector3(x, y, z));
-                }
-            }
+            CreateAllChunks();
         }
     }
 
@@ -60,20 +71,30 @@ public class HoneyGenerator : MonoBehaviour
     {
         if (Application.isPlaying)
         {
-            if (Time.time > nextActionTime)
+            if (pointsBuffer == null)
             {
-                nextActionTime += period;
+                CreateBuffers();
+            }
+            else if (Time.time > nextUpdateTime && chunks.Count != 0)
+            {
+                nextUpdateTime = Time.time + updateInterval;
 
-                if (chunks.Count != 0)
+                foreach (HoneyChunk c in chunks)
                 {
-                    foreach (HoneyChunk c in chunks)
-                    {
-                        Debug.Log($"Updating {c.name}. Next action time is {nextActionTime}...");
-                        c.UpdateHoneyGrowth();
-                    }
+                    Debug.Log($"Updating {c.name}. Next action time is {nextUpdateTime}...");
+                    UpdateChunkHoneyGrowth(c);
                 }
             }
         }
+        else
+        {
+            ReleaseBuffers();
+        }
+    }
+
+    private void UpdateChunkHoneyGrowth(HoneyChunk chunk)
+    {
+        int numPoints = chunk.voxelsPerAxis.x * chunk.voxelsPerAxis.y * chunk.voxelsPerAxis.z;
     }
 
     private void CreateChunk(Vector3 minBound)
@@ -178,6 +199,47 @@ public class HoneyGenerator : MonoBehaviour
             {
                 chunkHolder = new GameObject("ChunkHolder");
             }
+        }
+    }
+
+    private void GetOrSetDensityGenerator()
+    {
+        if (densityGenerator == null)
+        {
+            if (GameObject.Find("ChunkHolder"))
+            {
+                chunkHolder = GameObject.Find("ChunkHolder");
+            }
+            else
+            {
+                chunkHolder = new GameObject("ChunkHolder");
+            }
+        }
+    }
+
+    void CreateBuffers()
+    {
+        Vector3Int targetVoxelsPerAxis = chunks[0].voxelsPerAxis;
+        int numPoints = targetVoxelsPerAxis.x * targetVoxelsPerAxis.y * targetVoxelsPerAxis.z;
+
+        // Always create buffers in editor (since buffers are released immediately to prevent memory leak)
+        // Otherwise, only create if null or if size has changed
+        if (!Application.isPlaying || pointsBuffer == null || numPoints != pointsBuffer.count)
+        {
+            if (Application.isPlaying)
+            {
+                ReleaseBuffers();
+            }
+
+            pointsBuffer = new ComputeBuffer(numPoints, sizeof(float) * 4);
+        }
+    }
+
+    void ReleaseBuffers()
+    {
+        if (pointsBuffer != null)
+        {
+            pointsBuffer.Release();
         }
     }
 }

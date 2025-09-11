@@ -3,23 +3,14 @@ using UnityEngine;
 
 public class HoneyChunk : MonoBehaviour
 {
-    public float voxelSize = 2f;
+    private float voxelSize = 2f;
 
-    private List<HoneyVoxel> voxels;
-    private Vector3 voxelsPerAxis;
-
+    public Vector3Int voxelsPerAxis;
     public Bounds bounds;
 
-    Collider[] colliders;
+    private Collider[] colliders;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        // voxelsPerAxis[0] = Mathf.FloorToInt((xRange[1] - xRange[0]) / voxelSize);
-        // voxelsPerAxis[1] = Mathf.FloorToInt((yRange[1] - yCutoff) / voxelSize); // voxels are only above yCutoff
-        // voxelsPerAxis[2] = Mathf.FloorToInt((zRange[1] - zRange[0]) / voxelSize);
-    }
-
+    // Call after bounds are set
     public void SetUp()
     {
         // detect overlapping colliders
@@ -29,6 +20,11 @@ public class HoneyChunk : MonoBehaviour
             foreach (Collider c in colliders)
                 Debug.Log($"Found an object: {c.gameObject.name}");
         }
+
+        Vector3 size = bounds.size;
+        voxelsPerAxis[0] = Mathf.FloorToInt(size.x / voxelSize);
+        voxelsPerAxis[1] = Mathf.FloorToInt(size.y / voxelSize); // voxels are only above yCutoff
+        voxelsPerAxis[2] = Mathf.FloorToInt(size.z / voxelSize);
     }
 
     // Update is called once per frame
