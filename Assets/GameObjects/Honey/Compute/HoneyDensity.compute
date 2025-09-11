@@ -1,0 +1,17 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#include "Includes/Density.compute"
+
+#pragma kernel Density
+
+[numthreads(numThreads, numThreads, numThreads)]
+void Density (int3 id : SV_DispatchThreadID)
+{
+    if (id.x >= numVoxelsPerAxis.x || id.y >= numVoxelsPerAxis.y || id.z >= numVoxelsPerAxis.z) {
+        return;
+    }
+
+    float finalVal = numVoxelsPerAxis.x;
+
+    int index = indexFromCoord(id.x, id.y, id.z);
+    points[index] = float4(pos, finalVal);
+}

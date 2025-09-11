@@ -78,5 +78,8 @@
     "editor.formatOnSave": true,
     "csharpier.dev.customPath": "/Users/Dev/.dotnet/tools",
     "csharpier.enableDebugLogs": true,
-    "csharpier.dev.useCustomPath": true
+    "csharpier.dev.useCustomPath": true,
+    "[UnityShader]": {
+        "editor.defaultFormatter": "newyellow.unity-shader-formatter"
+    }
 }
