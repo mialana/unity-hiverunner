@@ -21,7 +21,8 @@ void Density (int3 id : SV_DispatchThreadID)
         return;
     }
 
-    float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
+    // float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
+    float3 pos = float3(5, 5, 5);
 
     float finalVal = pos.y / chunkSize.y;
 

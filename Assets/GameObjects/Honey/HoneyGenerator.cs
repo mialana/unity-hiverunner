@@ -12,6 +12,8 @@ public class HoneyGenerator : MonoBehaviour
     [Range(0f, 50f)]
     public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
 
+    public float isoLevel = 8f;
+
     private Vector3 chunkSize = new(20, 10, 20);
     private List<HoneyChunk> chunks;
 
@@ -20,8 +22,13 @@ public class HoneyGenerator : MonoBehaviour
 
     public BaseDensityGenerator densityGenerator;
     public GameObject chunkHolder;
+    public ComputeShader marchingCubesShader;
+    public Material honeyMat;
 
+    // Buffers
+    private ComputeBuffer countBuffer;
     private ComputeBuffer pointsBuffer;
+    private ComputeBuffer indexBuffer;
 
     void Awake()
     {
@@ -73,6 +80,7 @@ public class HoneyGenerator : MonoBehaviour
         {
             if (pointsBuffer == null)
             {
+                Debug.LogWarning(chunks.Count);
                 CreateBuffers();
             }
             else if (Time.time > nextUpdateTime && chunks.Count != 0)
@@ -94,6 +102,9 @@ public class HoneyGenerator : MonoBehaviour
 
     private void UpdateChunkHoneyGrowth(HoneyChunk chunk)
     {
+        int numVoxelsPerAxis = chunk.voxelsPerAxis[0] - 1;
+        int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / 8f);
+
         densityGenerator.Generate(
             pointsBuffer,
             chunk.voxelsPerAxis,
@@ -102,6 +113,45 @@ public class HoneyGenerator : MonoBehaviour
             chunk.bounds.center,
             chunk.voxelSize
         );
+
+        indexBuffer.SetCounterValue(0);
+        marchingCubesShader.SetBuffer(0, "points", pointsBuffer);
+        marchingCubesShader.SetBuffer(0, "triangles", indexBuffer);
+        marchingCubesShader.SetInt("numPointsPerAxis", chunk.voxelsPerAxis[0]);
+        marchingCubesShader.SetFloat("isoLevel", isoLevel);
+
+        marchingCubesShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
+
+        // Get number of triangles in the triangle buffer
+        ComputeBuffer.CopyCount(indexBuffer, countBuffer, 0);
+        int[] triCountArray = { 0 };
+        countBuffer.GetData(triCountArray);
+        int numTris = triCountArray[0];
+
+        // Get triangle data from shader
+        Triangle[] tris = new Triangle[numTris];
+        indexBuffer.GetData(tris, 0, 0, numTris);
+
+        Mesh mesh = chunk.mesh;
+        mesh.Clear();
+
+        var vertices = new Vector3[numTris * 3];
+        var meshTriangles = new int[numTris * 3];
+
+        for (int i = 0; i < numTris; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                meshTriangles[i * 3 + j] = i * 3 + j;
+                vertices[i * 3 + j] = tris[i][j];
+
+                Debug.Log(vertices[i * 3 + j]);
+            }
+        }
+        mesh.vertices = vertices;
+        mesh.triangles = meshTriangles;
+
+        mesh.RecalculateNormals();
     }
 
     private void CreateChunk(Vector3 minBound)
@@ -121,7 +171,7 @@ public class HoneyGenerator : MonoBehaviour
         HoneyChunk newChunk = _newChunkObj.AddComponent<HoneyChunk>();
         newChunk.bounds = newChunkBounds;
 
-        newChunk.SetUp();
+        newChunk.SetUp(honeyMat);
 
         chunks.Add(newChunk);
     }
@@ -213,13 +263,13 @@ public class HoneyGenerator : MonoBehaviour
     {
         if (densityGenerator == null)
         {
-            if (GameObject.Find("ChunkHolder"))
+            if (GameObject.Find("HoneyDensity"))
             {
-                chunkHolder = GameObject.Find("ChunkHolder");
+                chunkHolder = GameObject.Find("HoneyDensity");
             }
             else
             {
-                chunkHolder = new GameObject("ChunkHolder");
+                chunkHolder = new GameObject("HoneyDensity");
             }
         }
     }
@@ -228,6 +278,9 @@ public class HoneyGenerator : MonoBehaviour
     {
         Vector3Int targetVoxelsPerAxis = chunks[0].voxelsPerAxis;
         int numPoints = targetVoxelsPerAxis.x * targetVoxelsPerAxis.y * targetVoxelsPerAxis.z;
+        int numVoxelsPerAxis = targetVoxelsPerAxis.x - 1;
+        int numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
+        int maxTriangleCount = numVoxels * 5;
 
         // Always create buffers in editor (since buffers are released immediately to prevent memory leak)
         // Otherwise, only create if null or if size has changed
@@ -238,15 +291,42 @@ public class HoneyGenerator : MonoBehaviour
                 ReleaseBuffers();
             }
 
+            indexBuffer = new ComputeBuffer(
+                maxTriangleCount,
+                sizeof(float) * 3 * 3,
+                ComputeBufferType.Append
+            );
+
             pointsBuffer = new ComputeBuffer(numPoints, sizeof(float) * 4);
+            countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
         }
     }
 
     void ReleaseBuffers()
     {
-        if (pointsBuffer != null)
+        pointsBuffer?.Release();
+    }
+
+    struct Triangle
+    {
+        public Vector3 a;
+        public Vector3 b;
+        public Vector3 c;
+
+        public Vector3 this[int i]
         {
-            pointsBuffer.Release();
+            get
+            {
+                switch (i)
+                {
+                    case 0:
+                        return a;
+                    case 1:
+                        return b;
+                    default:
+                        return c;
+                }
+            }
         }
     }
 }
