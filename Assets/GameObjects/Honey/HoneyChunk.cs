@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HoneyChunk : MonoBehaviour
 {
-    public float voxelSize = 2f;
+    public float voxelSize = 1f;
 
     public Vector3Int voxelsPerAxis;
     public Bounds bounds;
@@ -18,6 +17,8 @@ public class HoneyChunk : MonoBehaviour
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;
 
+    public UnityEngine.Vector4[] densityValues;
+
     // Call after bounds are set
     public void SetUp(Material mat)
     {
@@ -29,7 +30,7 @@ public class HoneyChunk : MonoBehaviour
                 Debug.Log($"Found an object: {c.gameObject.name}");
         }
 
-        Vector3 size = bounds.size;
+        UnityEngine.Vector3 size = bounds.size;
         voxelsPerAxis[0] = Mathf.FloorToInt(size.x / voxelSize);
         voxelsPerAxis[1] = Mathf.FloorToInt(size.y / voxelSize); // voxels are only above yCutoff
         voxelsPerAxis[2] = Mathf.FloorToInt(size.z / voxelSize);
@@ -69,6 +70,10 @@ public class HoneyChunk : MonoBehaviour
         meshCollider.enabled = true;
 
         meshRenderer.material = mat;
+
+        // Initialize densityValues array based on the number of voxels
+        int numVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
+        densityValues = new Vector4[numVoxels];
     }
 
     // Update is called once per frame
@@ -78,6 +83,27 @@ public class HoneyChunk : MonoBehaviour
     {
         Gizmos.color = Color.black;
         Gizmos.DrawWireCube(bounds.center, bounds.size);
+
+        if (densityValues == null || densityValues.Length == 0)
+        {
+            return;
+        }
+
+        Gizmos.color = Color.yellow;
+
+        for (int i = 0; i < densityValues.Length; i++)
+        {
+            float density = densityValues[i].w;
+            if (density > 0)
+            {
+                UnityEngine.Vector3 pos = new(
+                    densityValues[i].x,
+                    densityValues[i].y,
+                    densityValues[i].z
+                );
+                Gizmos.DrawSphere(pos, density * 0.1f);
+            }
+        }
     }
 
     public void OnApplicationQuit()

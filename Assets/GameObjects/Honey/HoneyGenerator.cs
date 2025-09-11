@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -14,7 +15,7 @@ public class HoneyGenerator : MonoBehaviour
 
     public float isoLevel = 8f;
 
-    private Vector3 chunkSize = new(20, 10, 20);
+    private Vector3 chunkSize = new(20, 20, 20);
     private List<HoneyChunk> chunks;
 
     private float nextUpdateTime = 0.0f;
@@ -80,7 +81,6 @@ public class HoneyGenerator : MonoBehaviour
         {
             if (pointsBuffer == null)
             {
-                Debug.LogWarning(chunks.Count);
                 CreateBuffers();
             }
             else if (Time.time > nextUpdateTime && chunks.Count != 0)
@@ -89,12 +89,20 @@ public class HoneyGenerator : MonoBehaviour
 
                 foreach (HoneyChunk c in chunks)
                 {
-                    Debug.Log($"Updating {c.name}. Next action time is {nextUpdateTime}...");
+                    // Debug.Log($"Updating {c.name}. Next action time is {nextUpdateTime}...");
                     UpdateChunkHoneyGrowth(c);
                 }
             }
         }
         else
+        {
+            ReleaseBuffers();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Application.isPlaying)
         {
             ReleaseBuffers();
         }
@@ -122,6 +130,10 @@ public class HoneyGenerator : MonoBehaviour
 
         marchingCubesShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
+        int numPoints = chunk.voxelsPerAxis.x * chunk.voxelsPerAxis.y * chunk.voxelsPerAxis.z;
+
+        pointsBuffer.GetData(chunk.densityValues);
+
         // Get number of triangles in the triangle buffer
         ComputeBuffer.CopyCount(indexBuffer, countBuffer, 0);
         int[] triCountArray = { 0 };
@@ -144,8 +156,6 @@ public class HoneyGenerator : MonoBehaviour
             {
                 meshTriangles[i * 3 + j] = i * 3 + j;
                 vertices[i * 3 + j] = tris[i][j];
-
-                Debug.Log(vertices[i * 3 + j]);
             }
         }
         mesh.vertices = vertices;
@@ -304,7 +314,43 @@ public class HoneyGenerator : MonoBehaviour
 
     void ReleaseBuffers()
     {
-        pointsBuffer?.Release();
+        if (indexBuffer != null)
+        {
+            pointsBuffer.Release();
+            indexBuffer.Release();
+            countBuffer.Release();
+            pointsBuffer = null;
+            indexBuffer = null;
+            countBuffer = null;
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        if (pointsBuffer == null || chunks == null || chunks.Count == 0)
+        {
+            return;
+        }
+
+        // Read data from pointsBuffer
+        int numPoints =
+            chunks[0].voxelsPerAxis.x * chunks[0].voxelsPerAxis.y * chunks[0].voxelsPerAxis.z;
+        Vector4[] points = new Vector4[numPoints];
+        pointsBuffer.GetData(points);
+
+        Gizmos.color = Color.yellow;
+
+        foreach (Vector4 point in points)
+        {
+            // Draw a sphere at the position with size proportional to the density value
+            Vector3 position = new Vector3(point.x, point.y, point.z);
+            float density = point.w; // Assuming density is stored in the 'w' component
+
+            if (density > 0) // Only visualize positive density values
+            {
+                Gizmos.DrawSphere(position, density * 0.1f); // Scale density for visualization
+            }
+        }
     }
 
     struct Triangle

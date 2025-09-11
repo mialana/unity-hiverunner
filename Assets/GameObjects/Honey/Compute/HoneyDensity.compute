@@ -21,10 +21,9 @@ void Density (int3 id : SV_DispatchThreadID)
         return;
     }
 
-    // float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
-    float3 pos = float3(5, 5, 5);
+    float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
 
-    float finalVal = pos.y / chunkSize.y;
+    float finalVal = 1.f - (pos.y - (chunkCenter.y - chunkSize.y / 2)) / chunkSize.y;
 
     int index = indexFromCoord(id.x, id.y, id.z);
     points[index] = float4(pos, finalVal);
