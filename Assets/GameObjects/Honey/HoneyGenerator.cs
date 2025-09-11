@@ -13,7 +13,7 @@ public class HoneyGenerator : MonoBehaviour
     [Range(0f, 50f)]
     public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
 
-    public float isoLevel = 8f;
+    public float isoLevel = 0.5f;
 
     private Vector3 chunkSize = new(20, 20, 20);
     private List<HoneyChunk> chunks;
@@ -129,8 +129,6 @@ public class HoneyGenerator : MonoBehaviour
         marchingCubesShader.SetFloat("isoLevel", isoLevel);
 
         marchingCubesShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
-
-        int numPoints = chunk.voxelsPerAxis.x * chunk.voxelsPerAxis.y * chunk.voxelsPerAxis.z;
 
         pointsBuffer.GetData(chunk.densityValues);
 
