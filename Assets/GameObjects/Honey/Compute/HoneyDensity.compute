@@ -5,10 +5,13 @@ static const int numThreads = 8;
 
 RWStructuredBuffer<float4> points;
 float3 voxelsPerAxis;
-float3 worldBounds;
+float3 worldMin;
+float3 worldMax;
 float3 chunkSize;
 float3 chunkCenter;
 float voxelSize;
+
+float time;
 
 int indexFromCoord(uint x, uint y, uint z) {
     return z * voxelsPerAxis[0] * voxelsPerAxis[1] + y * voxelsPerAxis[1] + x;
@@ -23,7 +26,30 @@ void Density (int3 id : SV_DispatchThreadID)
 
     float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
 
-    float finalVal = 1.f - (pos.y - (chunkCenter.y - chunkSize.y / 2)) / chunkSize.y;
+    // Gradually oscillate the height of the honey over time
+    float heightFactor = time * 0.05f; // Oscillates between -0.5 and 0.5 every 10 seconds
+
+    float finalVal = (1.f - (pos.y - (chunkCenter.y - chunkSize.y / 2)) / chunkSize.y);
+    // finalVal += heightFactor;
+
+    // Add sinusoidal noise based on position
+    float noise = sin(pos.x * 0.5f + time * 0.2f) * sin(pos.z * 0.7f + time * 0.3f) * 0.07f;
+
+    finalVal += noise;
+
+    // Explicitly set density to zero near x and z walls
+    float threshold = 2.f; // Distance threshold from walls
+    if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold ||
+    abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
+    {
+        finalVal = 0.0f;
+    }
+
+    // Clamp the final value to ensure it stays within a valid range
+    finalVal = clamp(finalVal, 0.f, 1.f);
+
+    // Clamp the final value to ensure it stays within a valid range
+    finalVal = clamp(finalVal, 0.f, 1.f);
 
     int index = indexFromCoord(id.x, id.y, id.z);
     points[index] = float4(pos, finalVal);

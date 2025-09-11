@@ -1,3 +1,5 @@
+// Ported from https://github.com/SebLague/Marching-Cubes/blob/master/Assets/Scripts/Compute/MarchingCubes.compute
+
 #pragma kernel March
 #include "/Includes/MarchTables.hlsl"
 

@@ -13,13 +13,13 @@ public class HoneyGenerator : MonoBehaviour
     [Range(0f, 50f)]
     public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
 
-    public float isoLevel = 0.5f;
+    public float isoLevel = 0.9f;
 
     private Vector3 chunkSize = new(20, 20, 20);
     private List<HoneyChunk> chunks;
 
     private float nextUpdateTime = 0.0f;
-    public float updateInterval = 3f;
+    public float updateInterval = 1.5f;
 
     public BaseDensityGenerator densityGenerator;
     public GameObject chunkHolder;
@@ -113,10 +113,14 @@ public class HoneyGenerator : MonoBehaviour
         int numVoxelsPerAxis = chunk.voxelsPerAxis[0] - 1;
         int numThreadsPerAxis = Mathf.CeilToInt(numVoxelsPerAxis / 8f);
 
+        Vector3 worldMin = new(xRange[0], yCutoff, zRange[0]);
+        Vector3 worldMax = new(xRange[1], yRange[1], zRange[1]);
+
         densityGenerator.Generate(
             pointsBuffer,
             chunk.voxelsPerAxis,
-            new(0, 0, 0),
+            worldMin,
+            worldMax,
             chunkSize,
             chunk.bounds.center,
             chunk.voxelSize
@@ -192,52 +196,53 @@ public class HoneyGenerator : MonoBehaviour
             return;
         }
 
-        gameObject.transform.localScale.Set(5f, 5f, 5f);
+        // gameObject.transform.localScale.Set(5f, 5f, 5f);
 
         MeshFilter filter = GetComponent<MeshFilter>();
         MeshRenderer renderer = GetComponent<MeshRenderer>();
+        renderer.material = honeyMat;
 
         // Define cube vertices in LOCAL space (centered at origin, unit size)
         Vector3[] vertices = new Vector3[]
         {
-            new(xRange[0], yRange[0], zRange[0]), // 0
-            new(xRange[1], yRange[0], zRange[0]), // 1
-            new(xRange[1], yCutoff, zRange[0]), // 2
-            new(xRange[0], yCutoff, zRange[0]), // 3
-            new(xRange[0], yRange[0], zRange[1]), // 4
-            new(xRange[1], yRange[0], zRange[1]), // 5
-            new(xRange[1], yCutoff, zRange[1]), // 6
-            new(xRange[0], yCutoff, zRange[1]), // 7
+            // new(xRange[0], yRange[0], zRange[0]), // 0
+            // new(xRange[1], yRange[0], zRange[0]), // 1
+            // new(xRange[1], yCutoff, zRange[0]), // 2
+            // new(xRange[0], yCutoff, zRange[0]), // 3
+            // new(xRange[0], yRange[0], zRange[1]), // 4
+            // new(xRange[1], yRange[0], zRange[1]), // 5
+            // new(xRange[1], yCutoff, zRange[1]), // 6
+            // new(xRange[0], yCutoff, zRange[1]), // 7
         };
         // Triangles (12 total → 2 per face × 6 faces)
         // csharpier-ignore
         int[] triangles = new int[]
         {
-            // back
-            0, 2, 1, 0, 3, 2,
-            // right
-            1, 2, 6, 1, 6, 5,
-            // front
-            5, 6, 7, 5, 7, 4,
-            // left
-            4, 7, 3, 4, 3, 0,
-            // top
-            3, 7, 6, 3, 6, 2,
-            // bottom
-            4, 0, 1, 4, 1, 5
+            // // back
+            // 0, 2, 1, 0, 3, 2,
+            // // right
+            // 1, 2, 6, 1, 6, 5,
+            // // front
+            // 5, 6, 7, 5, 7, 4,
+            // // left
+            // 4, 7, 3, 4, 3, 0,
+            // // top
+            // 3, 7, 6, 3, 6, 2,
+            // // bottom
+            // 4, 0, 1, 4, 1, 5
         };
 
         // Simple cube UVs
         Vector2[] uvs = new Vector2[]
         {
-            new(0, 0),
-            new(1, 0),
-            new(1, 1),
-            new(0, 1),
-            new(0, 0),
-            new(1, 0),
-            new(1, 1),
-            new(0, 1),
+            // new(0, 0),
+            // new(1, 0),
+            // new(1, 1),
+            // new(0, 1),
+            // new(0, 0),
+            // new(1, 0),
+            // new(1, 1),
+            // new(0, 1),
         };
 
         Mesh mesh = new()
@@ -320,34 +325,6 @@ public class HoneyGenerator : MonoBehaviour
             pointsBuffer = null;
             indexBuffer = null;
             countBuffer = null;
-        }
-    }
-
-    void OnDrawGizmos()
-    {
-        if (pointsBuffer == null || chunks == null || chunks.Count == 0)
-        {
-            return;
-        }
-
-        // Read data from pointsBuffer
-        int numPoints =
-            chunks[0].voxelsPerAxis.x * chunks[0].voxelsPerAxis.y * chunks[0].voxelsPerAxis.z;
-        Vector4[] points = new Vector4[numPoints];
-        pointsBuffer.GetData(points);
-
-        Gizmos.color = Color.yellow;
-
-        foreach (Vector4 point in points)
-        {
-            // Draw a sphere at the position with size proportional to the density value
-            Vector3 position = new Vector3(point.x, point.y, point.z);
-            float density = point.w; // Assuming density is stored in the 'w' component
-
-            if (density > 0) // Only visualize positive density values
-            {
-                Gizmos.DrawSphere(position, density * 0.1f); // Scale density for visualization
-            }
         }
     }
 

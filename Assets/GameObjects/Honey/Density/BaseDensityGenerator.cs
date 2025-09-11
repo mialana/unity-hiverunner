@@ -13,7 +13,8 @@ public abstract class BaseDensityGenerator : MonoBehaviour
     public virtual ComputeBuffer Generate(
         ComputeBuffer pointsBuffer,
         Vector3 voxelsPerAxis,
-        Vector3 worldBounds,
+        Vector3 worldMin,
+        Vector3 worldMax,
         Vector3 chunkSize,
         Vector3 chunkCenter,
         float voxelSize
@@ -29,7 +30,8 @@ public abstract class BaseDensityGenerator : MonoBehaviour
         // Set paramaters
         densityShader.SetBuffer(0, "points", pointsBuffer);
         densityShader.SetVector("voxelsPerAxis", voxelsPerAxis);
-        densityShader.SetVector("worldSize", worldBounds);
+        densityShader.SetVector("worldMin", worldMin);
+        densityShader.SetVector("worldMax", worldMax);
         densityShader.SetVector("chunkSize", chunkSize);
         densityShader.SetVector(
             "chunkCenter",

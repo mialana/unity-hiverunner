@@ -89,21 +89,18 @@ public class HoneyChunk : MonoBehaviour
             return;
         }
 
-        Gizmos.color = Color.yellow;
+        // Draw spheres to debug density
+        // Gizmos.color = Color.white;
 
-        for (int i = 0; i < densityValues.Length; i++)
-        {
-            float density = densityValues[i].w;
-            if (density > 0)
-            {
-                UnityEngine.Vector3 pos = new(
-                    densityValues[i].x,
-                    densityValues[i].y,
-                    densityValues[i].z
-                );
-                Gizmos.DrawSphere(pos, density * 0.1f);
-            }
-        }
+        // for (int i = 0; i < densityValues.Length; i++)
+        // {
+        //     float density = densityValues[i].w;
+        //     if (density > 0)
+        //     {
+        //         Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
+        //         Gizmos.DrawSphere(pos, density * 0.1f);
+        //     }
+        // }
     }
 
     public void OnApplicationQuit()
