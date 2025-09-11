@@ -10,6 +10,8 @@ public class HoneyChunk : MonoBehaviour
 
     public Bounds bounds;
 
+    Collider[] colliders;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -18,8 +20,19 @@ public class HoneyChunk : MonoBehaviour
         // voxelsPerAxis[2] = Mathf.FloorToInt((zRange[1] - zRange[0]) / voxelSize);
     }
 
+    public void SetUp()
+    {
+        // detect overlapping colliders
+        colliders = Physics.OverlapBox(center: bounds.center, halfExtents: bounds.extents);
+        if (colliders.Length != 0)
+        {
+            foreach (Collider c in colliders)
+                Debug.Log($"Found an object: {c.gameObject.name}");
+        }
+    }
+
     // Update is called once per frame
-    void Update() { }
+    public void UpdateHoneyGrowth() { }
 
     void OnDrawGizmos()
     {

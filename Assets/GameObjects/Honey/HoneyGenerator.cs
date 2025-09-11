@@ -18,6 +18,9 @@ public class HoneyGenerator : MonoBehaviour
     private Vector3 chunkSize = new(20, 10, 20);
     private List<HoneyChunk> chunks;
 
+    private float nextActionTime = 0.0f;
+    public float period = 3f;
+
     void Awake()
     {
         GenerateStaticHoneyMesh(); // for visual purposes in editor
@@ -53,7 +56,25 @@ public class HoneyGenerator : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update() { }
+    void Update()
+    {
+        if (Application.isPlaying)
+        {
+            if (Time.time > nextActionTime)
+            {
+                nextActionTime += period;
+
+                if (chunks.Count != 0)
+                {
+                    foreach (HoneyChunk c in chunks)
+                    {
+                        Debug.Log($"Updating {c.name}. Next action time is {nextActionTime}...");
+                        c.UpdateHoneyGrowth();
+                    }
+                }
+            }
+        }
+    }
 
     private void CreateChunk(Vector3 minBound)
     {
@@ -71,6 +92,8 @@ public class HoneyGenerator : MonoBehaviour
         _newChunkObj.transform.parent = chunkHolder.transform;
         HoneyChunk newChunk = _newChunkObj.AddComponent<HoneyChunk>();
         newChunk.bounds = newChunkBounds;
+
+        newChunk.SetUp();
 
         chunks.Add(newChunk);
     }
