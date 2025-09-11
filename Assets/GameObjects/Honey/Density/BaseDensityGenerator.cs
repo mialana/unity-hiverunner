@@ -12,23 +12,23 @@ public abstract class BaseDensityGenerator : MonoBehaviour
 
     public virtual ComputeBuffer Generate(
         ComputeBuffer pointsBuffer,
-        Vector3 numVoxelsPerAxis,
+        Vector3 voxelsPerAxis,
         Vector3 worldBounds,
         Vector3 chunkSize,
         Vector3 chunkCenter,
         float voxelSize
     )
     {
-        Vector3Int numThreadsPerAxis = new(
-            Mathf.CeilToInt(numVoxelsPerAxis[0] / (float)threadGroupSize),
-            Mathf.CeilToInt(numVoxelsPerAxis[1] / (float)threadGroupSize),
-            Mathf.CeilToInt(numVoxelsPerAxis[3] / (float)threadGroupSize)
+        Vector3Int threadsPerAxis = new(
+            Mathf.CeilToInt(voxelsPerAxis[0] / (float)threadGroupSize),
+            Mathf.CeilToInt(voxelsPerAxis[1] / (float)threadGroupSize),
+            Mathf.CeilToInt(voxelsPerAxis[2] / (float)threadGroupSize)
         );
 
         // Points buffer is populated inside shader with pos (xyz) + density (w).
         // Set paramaters
         densityShader.SetBuffer(0, "points", pointsBuffer);
-        densityShader.SetVector("numVoxelsPerAxis", numVoxelsPerAxis);
+        densityShader.SetVector("voxelsPerAxis", voxelsPerAxis);
         densityShader.SetVector("worldSize", worldBounds);
         densityShader.SetVector("chunkSize", chunkSize);
         densityShader.SetVector(
@@ -38,7 +38,7 @@ public abstract class BaseDensityGenerator : MonoBehaviour
         densityShader.SetFloat("voxelSize", voxelSize);
 
         // Dispatch shader
-        densityShader.Dispatch(0, numThreadsPerAxis[0], numThreadsPerAxis[1], numThreadsPerAxis[2]);
+        densityShader.Dispatch(0, threadsPerAxis[0], threadsPerAxis[1], threadsPerAxis[2]);
 
         if (buffersToRelease != null)
         {

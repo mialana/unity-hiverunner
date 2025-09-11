@@ -5,7 +5,7 @@ public class HoneyDensity : BaseDensityGenerator
 {
     public override ComputeBuffer Generate(
         ComputeBuffer pointsBuffer,
-        Vector3 numVoxelsPerAxis,
+        Vector3 voxelsPerAxis,
         Vector3 worldBounds,
         Vector3 chunkSize,
         Vector3 chunkCenter,
@@ -20,7 +20,7 @@ public class HoneyDensity : BaseDensityGenerator
 
         return base.Generate(
             pointsBuffer,
-            numVoxelsPerAxis,
+            voxelsPerAxis,
             worldBounds,
             chunkSize,
             chunkCenter,

@@ -94,7 +94,14 @@ public class HoneyGenerator : MonoBehaviour
 
     private void UpdateChunkHoneyGrowth(HoneyChunk chunk)
     {
-        int numPoints = chunk.voxelsPerAxis.x * chunk.voxelsPerAxis.y * chunk.voxelsPerAxis.z;
+        densityGenerator.Generate(
+            pointsBuffer,
+            chunk.voxelsPerAxis,
+            new(0, 0, 0),
+            chunkSize,
+            chunk.bounds.center,
+            chunk.voxelSize
+        );
     }
 
     private void CreateChunk(Vector3 minBound)

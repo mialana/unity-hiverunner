@@ -1,16 +1,29 @@
 // Each #kernel tells which function to compile; you can have many kernels
-#include "Includes/Density.compute"
-
 #pragma kernel Density
+
+static const int numThreads = 8;
+
+RWStructuredBuffer<float4> points;
+float3 voxelsPerAxis;
+float3 worldBounds;
+float3 chunkSize;
+float3 chunkCenter;
+float voxelSize;
+
+int indexFromCoord(uint x, uint y, uint z) {
+    return z * voxelsPerAxis[0] * voxelsPerAxis[1] + y * voxelsPerAxis[1] + x;
+}
 
 [numthreads(numThreads, numThreads, numThreads)]
 void Density (int3 id : SV_DispatchThreadID)
 {
-    if (id.x >= numVoxelsPerAxis.x || id.y >= numVoxelsPerAxis.y || id.z >= numVoxelsPerAxis.z) {
+    if (id.x >= voxelsPerAxis[0] || id.y >= voxelsPerAxis[1] || id.z >= voxelsPerAxis[2]) {
         return;
     }
 
-    float finalVal = numVoxelsPerAxis.x;
+    float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
+
+    float finalVal = pos.y / chunkSize.y;
 
     int index = indexFromCoord(id.x, id.y, id.z);
     points[index] = float4(pos, finalVal);

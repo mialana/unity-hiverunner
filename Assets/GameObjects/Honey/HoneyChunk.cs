@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class HoneyChunk : MonoBehaviour
 {
-    private float voxelSize = 2f;
+    public float voxelSize = 2f;
 
     public Vector3Int voxelsPerAxis;
     public Bounds bounds;
