@@ -17,7 +17,7 @@ public class HoneyChunk : MonoBehaviour
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;
 
-    public UnityEngine.Vector4[] densityValues;
+    public Vector4[] densityValues;
 
     // Call after bounds are set
     public void SetUp(Material mat)
@@ -30,7 +30,7 @@ public class HoneyChunk : MonoBehaviour
                 Debug.Log($"Found an object: {c.gameObject.name}");
         }
 
-        UnityEngine.Vector3 size = bounds.size;
+        Vector3 size = bounds.size;
         voxelsPerAxis[0] = Mathf.FloorToInt(size.x / voxelSize);
         voxelsPerAxis[1] = Mathf.FloorToInt(size.y / voxelSize); // voxels are only above yCutoff
         voxelsPerAxis[2] = Mathf.FloorToInt(size.z / voxelSize);
@@ -90,17 +90,24 @@ public class HoneyChunk : MonoBehaviour
         }
 
         // Draw spheres to debug density
-        // Gizmos.color = Color.white;
 
-        // for (int i = 0; i < densityValues.Length; i++)
-        // {
-        //     float density = densityValues[i].w;
-        //     if (density > 0)
-        //     {
-        //         Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
-        //         Gizmos.DrawSphere(pos, density * 0.1f);
-        //     }
-        // }
+        Color gizmosColor = Color.black;
+
+        for (int i = 0; i < densityValues.Length; i++)
+        {
+            float density = densityValues[i].w;
+
+            if (density > 0)
+            {
+                gizmosColor.r = density;
+                gizmosColor.g = density;
+                gizmosColor.b = density;
+
+                Gizmos.color = gizmosColor;
+                Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
+                Gizmos.DrawSphere(pos, 0.1f);
+            }
+        }
     }
 
     public void OnApplicationQuit()

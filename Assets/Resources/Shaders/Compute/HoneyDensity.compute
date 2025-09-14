@@ -1,7 +1,9 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel Density
 
-static const int numThreads = 8;
+#include "Common.hlsl"
+
+static const int blockSize = 8;
 
 RWStructuredBuffer<float4> points;
 float3 voxelsPerAxis;
@@ -13,11 +15,7 @@ float voxelSize;
 
 float time;
 
-int indexFromCoord(uint x, uint y, uint z) {
-    return z * voxelsPerAxis[0] * voxelsPerAxis[1] + y * voxelsPerAxis[1] + x;
-}
-
-[numthreads(numThreads, numThreads, numThreads)]
+[numthreads(blockSize, blockSize, blockSize)]
 void Density (int3 id : SV_DispatchThreadID)
 {
     if (id.x >= voxelsPerAxis[0] || id.y >= voxelsPerAxis[1] || id.z >= voxelsPerAxis[2]) {
@@ -51,6 +49,6 @@ void Density (int3 id : SV_DispatchThreadID)
     // Clamp the final value to ensure it stays within a valid range
     finalVal = clamp(finalVal, 0.f, 1.f);
 
-    int index = indexFromCoord(id.x, id.y, id.z);
+    int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
     points[index] = float4(pos, finalVal);
 }

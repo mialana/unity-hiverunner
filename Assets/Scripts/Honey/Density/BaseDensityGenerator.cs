@@ -5,7 +5,6 @@ using UnityEngine;
 
 public abstract class BaseDensityGenerator : MonoBehaviour
 {
-    const int threadGroupSize = 8;
     public ComputeShader densityShader;
 
     protected List<ComputeBuffer> buffersToRelease;
@@ -20,12 +19,6 @@ public abstract class BaseDensityGenerator : MonoBehaviour
         float voxelSize
     )
     {
-        Vector3Int threadsPerAxis = new(
-            Mathf.CeilToInt(voxelsPerAxis[0] / (float)threadGroupSize),
-            Mathf.CeilToInt(voxelsPerAxis[1] / (float)threadGroupSize),
-            Mathf.CeilToInt(voxelsPerAxis[2] / (float)threadGroupSize)
-        );
-
         // Points buffer is populated inside shader with pos (xyz) + density (w).
         // Set paramaters
         densityShader.SetBuffer(0, "points", pointsBuffer);
@@ -40,7 +33,15 @@ public abstract class BaseDensityGenerator : MonoBehaviour
         densityShader.SetFloat("voxelSize", voxelSize);
 
         // Dispatch shader
-        densityShader.Dispatch(0, threadsPerAxis[0], threadsPerAxis[1], threadsPerAxis[2]);
+        Vector3 blockSize = Common.GetBlockSize(densityShader, "Density");
+
+        Vector3Int gridSize = new(
+            Mathf.CeilToInt(voxelsPerAxis[0] / blockSize.x),
+            Mathf.CeilToInt(voxelsPerAxis[1] / blockSize.y),
+            Mathf.CeilToInt(voxelsPerAxis[2] / blockSize.z)
+        );
+
+        densityShader.Dispatch(0, gridSize[0], gridSize[1], gridSize[2]);
 
         if (buffersToRelease != null)
         {

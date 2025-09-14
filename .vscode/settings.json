@@ -76,7 +76,6 @@
     },
     "csharp.format.enable": true,
     "editor.formatOnSave": true,
-    "csharpier.dev.customPath": "",
     "csharpier.enableDebugLogs": true,
     "csharpier.dev.useCustomPath": true,
     "[UnityShader]": {
