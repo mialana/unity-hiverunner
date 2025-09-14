@@ -3,6 +3,12 @@ using UnityEngine;
 
 public class HoneyDensity : BaseDensityGenerator
 {
+    void Awake()
+    {
+        densityShader =
+            Resources.Load("Shaders/Compute/HoneyDensity", typeof(ComputeShader)) as ComputeShader;
+    }
+
     public override ComputeBuffer Generate(
         ComputeBuffer pointsBuffer,
         Vector3 voxelsPerAxis,
