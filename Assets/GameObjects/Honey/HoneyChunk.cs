@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HoneyChunk : MonoBehaviour
 {
-    public float voxelSize = 1f;
+    public float voxelSize = 0.5f;
 
     public Vector3Int voxelsPerAxis;
     public Bounds bounds;

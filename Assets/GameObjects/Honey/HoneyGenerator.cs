@@ -1,13 +1,12 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HoneyGenerator : MonoBehaviour
 {
-    private Vector2 xRange = new(-50f, 50f);
-    private Vector2 yRange = new(0f, 50f);
+    public Vector2 xRange = new(-50f, 50f);
+    public Vector2 yRange = new(0f, 50f);
     public Vector2 zRange = new(-10f, 10f);
 
     [Range(0f, 50f)]
@@ -19,7 +18,7 @@ public class HoneyGenerator : MonoBehaviour
     private List<HoneyChunk> chunks;
 
     private float nextUpdateTime = 0.0f;
-    public float updateInterval = 1.5f;
+    public float updateInterval = 0.01f;
 
     public BaseDensityGenerator densityGenerator;
     public GameObject chunkHolder;
@@ -31,6 +30,9 @@ public class HoneyGenerator : MonoBehaviour
     private ComputeBuffer pointsBuffer;
     private ComputeBuffer indexBuffer;
 
+    private ComputeBuffer edgeTableBuffer;
+    private ComputeBuffer triTableBuffer;
+
     void Awake()
     {
         GenerateStaticHoneyMesh(); // for visual purposes in editor
@@ -40,6 +42,8 @@ public class HoneyGenerator : MonoBehaviour
             chunks = new List<HoneyChunk>();
 
             DestroyAllChunks();
+
+            CreateTableBuffers();
         }
     }
 
@@ -97,6 +101,7 @@ public class HoneyGenerator : MonoBehaviour
         else
         {
             ReleaseBuffers();
+            ReleaseTableBuffers();
         }
     }
 
@@ -131,6 +136,9 @@ public class HoneyGenerator : MonoBehaviour
         marchingCubesShader.SetBuffer(0, "triangles", indexBuffer);
         marchingCubesShader.SetInt("numPointsPerAxis", chunk.voxelsPerAxis[0]);
         marchingCubesShader.SetFloat("isoLevel", isoLevel);
+
+        marchingCubesShader.SetBuffer(0, "edgeTable", edgeTableBuffer);
+        marchingCubesShader.SetBuffer(0, "triTable", triTableBuffer);
 
         marchingCubesShader.Dispatch(0, numThreadsPerAxis, numThreadsPerAxis, numThreadsPerAxis);
 
@@ -326,6 +334,27 @@ public class HoneyGenerator : MonoBehaviour
             indexBuffer = null;
             countBuffer = null;
         }
+    }
+
+    void CreateTableBuffers()
+    {
+        // Edge table: 256 ints
+        int[] edgeTableData = MarchTables.EdgeTable;
+        edgeTableBuffer = new ComputeBuffer(edgeTableData.Length, sizeof(int));
+        edgeTableBuffer.SetData(edgeTableData);
+
+        // Tri table: 256 * 16 ints
+        int[] triTableData = MarchTables.TriTable;
+        triTableBuffer = new ComputeBuffer(triTableData.Length, sizeof(int));
+        triTableBuffer.SetData(triTableData);
+    }
+
+    void ReleaseTableBuffers()
+    {
+        edgeTableBuffer?.Release();
+        edgeTableBuffer = null;
+        triTableBuffer?.Release();
+        triTableBuffer = null;
     }
 
     struct Triangle

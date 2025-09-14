@@ -66,7 +66,7 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "cis5680-project2.sln",
+    "dotnet.defaultSolution": "unity-hiverunner.sln",
     "editor.inlineSuggest.enabled": false,
     "[csharp]": {
         "editor.defaultFormatter": "csharpier.csharpier-vscode"
@@ -76,7 +76,7 @@
     },
     "csharp.format.enable": true,
     "editor.formatOnSave": true,
-    "csharpier.dev.customPath": "/Users/Dev/.dotnet/tools",
+    "csharpier.dev.customPath": "",
     "csharpier.enableDebugLogs": true,
     "csharpier.dev.useCustomPath": true,
     "[UnityShader]": {
