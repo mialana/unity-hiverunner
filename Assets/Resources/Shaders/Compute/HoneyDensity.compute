@@ -23,6 +23,7 @@ void Density (int3 id : SV_DispatchThreadID)
     }
 
     float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
+    pos = min(worldMax, pos);
 
     // Gradually oscillate the height of the honey over time
     float heightFactor = time * 0.05f; // Oscillates between -0.5 and 0.5 every 10 seconds
@@ -36,15 +37,12 @@ void Density (int3 id : SV_DispatchThreadID)
     finalVal += noise;
 
     // Explicitly set density to zero near x and z walls
-    float threshold = 2.f; // Distance threshold from walls
-    if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold ||
-    abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
-    {
-        finalVal = 0.0f;
-    }
-
-    // Clamp the final value to ensure it stays within a valid range
-    finalVal = clamp(finalVal, 0.f, 1.f);
+    // float threshold = 0.5f; // Distance threshold from walls
+    // if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold ||
+    // abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
+    // {
+    //     finalVal = 0.0f;
+    // }
 
     // Clamp the final value to ensure it stays within a valid range
     finalVal = clamp(finalVal, 0.f, 1.f);

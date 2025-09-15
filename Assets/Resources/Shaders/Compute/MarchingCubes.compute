@@ -52,7 +52,7 @@ void March (int3 id : SV_DispatchThreadID)
 
     for (int i = 0; ; i += 3) {
         int edgeIndex = triangulationTable[offset + i];
-        if (edgeIndex == - 1) break;
+        if (edgeIndex == - 1) break; // denotes all triangles are created for this cube
 
         int a0 = cornerIndexAFromEdge[edgeIndex];
         int b0 = cornerIndexBFromEdge[edgeIndex];

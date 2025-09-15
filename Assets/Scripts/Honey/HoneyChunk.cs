@@ -20,7 +20,7 @@ public class HoneyChunk : MonoBehaviour
     public Vector4[] densityValues;
 
     // Call after bounds are set
-    public void SetUp(Material mat)
+    public void SetUp(Material mat, bool debugMode)
     {
         // detect overlapping colliders
         colliders = Physics.OverlapBox(center: bounds.center, halfExtents: bounds.extents);
@@ -31,9 +31,9 @@ public class HoneyChunk : MonoBehaviour
         }
 
         Vector3 size = bounds.size;
-        voxelsPerAxis[0] = Mathf.FloorToInt(size.x / voxelSize);
-        voxelsPerAxis[1] = Mathf.FloorToInt(size.y / voxelSize); // voxels are only above yCutoff
-        voxelsPerAxis[2] = Mathf.FloorToInt(size.z / voxelSize);
+        voxelsPerAxis[0] = Mathf.CeilToInt(size.x / voxelSize) + 1;
+        voxelsPerAxis[1] = Mathf.CeilToInt(size.y / voxelSize) + 1;
+        voxelsPerAxis[2] = Mathf.CeilToInt(size.z / voxelSize) + 1;
 
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
@@ -71,9 +71,12 @@ public class HoneyChunk : MonoBehaviour
 
         meshRenderer.material = mat;
 
-        // Initialize densityValues array based on the number of voxels
-        int numVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
-        densityValues = new Vector4[numVoxels];
+        if (debugMode)
+        {
+            // Initialize densityValues array based on the number of voxels
+            int totalVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
+            densityValues = new Vector4[totalVoxels];
+        }
     }
 
     // Update is called once per frame

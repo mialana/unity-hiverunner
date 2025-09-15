@@ -8,6 +8,9 @@ public class HoneyGenerator : MonoBehaviour
     public Vector2 yRange = new(0f, 50f);
     public Vector2 zRange = new(-10f, 10f);
 
+    private Vector3 worldMin;
+    private Vector3 worldMax;
+
     [Range(0f, 50f)]
     public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
 
@@ -40,23 +43,22 @@ public class HoneyGenerator : MonoBehaviour
         Init();
 
         DestroyAllChunks();
-        CreateTableBuffers();
     }
 
     void Start()
     {
         CreateAllChunks();
+
+        PrepareBuffers();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (pointsBuffer == null)
+        if (Time.time > nextUpdateTime && chunks.Count != 0)
         {
-            CreateBuffers();
-        }
-        else if (Time.time > nextUpdateTime && chunks.Count != 0)
-        {
+            PrepareBuffers();
+
             nextUpdateTime = Time.time + updateInterval;
 
             foreach (HoneyChunk c in chunks)
@@ -153,7 +155,7 @@ public class HoneyGenerator : MonoBehaviour
         Vector3 maxBound = new(
             Mathf.Min(minBound[0] + chunkSize[0], xRange[1]),
             Mathf.Min(minBound[1] + chunkSize[1], yRange[1]),
-            Mathf.Min(minBound[2] + chunkSize[2], yRange[1])
+            Mathf.Min(minBound[2] + chunkSize[2], zRange[1])
         );
 
         Bounds newChunkBounds = new();
@@ -167,22 +169,22 @@ public class HoneyGenerator : MonoBehaviour
 
         newChunk.voxelSize = voxelSize;
 
-        newChunk.SetUp(honeyMat);
+        newChunk.SetUp(honeyMat, debugMode);
 
         chunks.Add(newChunk);
     }
 
     private void UpdateChunkMesh(HoneyChunk chunk)
     {
-        Vector3 worldMin = new(xRange[0], yCutoff, zRange[0]);
-        Vector3 worldMax = new(xRange[1], yRange[1], zRange[1]);
+        worldMin = new(xRange[0], yCutoff, zRange[0]);
+        worldMax = new(xRange[1], yRange[1], zRange[1]);
 
         pointsBuffer = densityGenerator.Generate(
             pointsBuffer,
             chunk.voxelsPerAxis,
             worldMin,
             worldMax,
-            chunkSize,
+            chunk.bounds.size,
             chunk.bounds.center,
             chunk.voxelSize
         );
@@ -201,7 +203,6 @@ public class HoneyGenerator : MonoBehaviour
         marchingCubesShader.SetBuffer(0, "triangulationTable", triangulationTableBuffer);
 
         Vector3 blockSize = Common.GetBlockSize(marchingCubesShader, "March");
-
         Vector3Int gridSize = new(
             Mathf.CeilToInt(chunk.voxelsPerAxis[0] / blockSize.x),
             Mathf.CeilToInt(chunk.voxelsPerAxis[1] / blockSize.y),
@@ -240,22 +241,18 @@ public class HoneyGenerator : MonoBehaviour
         mesh.RecalculateNormals();
     }
 
-    void CreateBuffers()
+    void PrepareBuffers()
     {
+        // first chunk has largest size possible
         Vector3Int targetVoxelsPerAxis = chunks[0].voxelsPerAxis;
-        int numPoints = targetVoxelsPerAxis.x * targetVoxelsPerAxis.y * targetVoxelsPerAxis.z;
-        int numVoxelsPerAxis = targetVoxelsPerAxis.x - 1;
-        int numVoxels = numVoxelsPerAxis * numVoxelsPerAxis * numVoxelsPerAxis;
+        int numVoxels = targetVoxelsPerAxis.x * targetVoxelsPerAxis.y * targetVoxelsPerAxis.z;
+
         int maxTriangleCount = numVoxels * 5;
 
-        // Always create buffers in editor (since buffers are released immediately to prevent memory leak)
-        // Otherwise, only create if null or if size has changed
-        if (!Application.isPlaying || pointsBuffer == null || numPoints != pointsBuffer.count)
+        // only create if points buffer is null or if size of first chunk has changed
+        if (pointsBuffer == null || numVoxels != pointsBuffer.count)
         {
-            if (Application.isPlaying)
-            {
-                ReleaseBuffers();
-            }
+            ReleaseBuffers();
 
             indexBuffer = new ComputeBuffer(
                 maxTriangleCount,
@@ -263,8 +260,14 @@ public class HoneyGenerator : MonoBehaviour
                 ComputeBufferType.Append
             );
 
-            pointsBuffer = new ComputeBuffer(numPoints, sizeof(float) * 4);
+            pointsBuffer = new ComputeBuffer(numVoxels, sizeof(float) * 4);
             countBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
+        }
+        if (triangulationTableBuffer == null)
+        {
+            int[] triangulationData = MarchTable.Triangulation;
+            triangulationTableBuffer = new ComputeBuffer(triangulationData.Length, sizeof(int));
+            triangulationTableBuffer.SetData(triangulationData);
         }
     }
 
@@ -281,12 +284,7 @@ public class HoneyGenerator : MonoBehaviour
         }
     }
 
-    void CreateTableBuffers()
-    {
-        int[] triangulationData = MarchTable.Triangulation;
-        triangulationTableBuffer = new ComputeBuffer(triangulationData.Length, sizeof(int));
-        triangulationTableBuffer.SetData(triangulationData);
-    }
+    void PrepareTableBuffer() { }
 
     void ReleaseTableBuffers()
     {
