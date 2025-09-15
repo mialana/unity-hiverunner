@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -76,7 +77,7 @@ public class HoneyChunk : MonoBehaviour
     // Update is called once per frame
     private void FindChunkColliders()
     {
-        // detect overlapping colliderscolliders[i].gameObject.
+        // detect overlapping colliders
         colliders = Physics.OverlapBox(center: bounds.center, halfExtents: bounds.extents);
         if (colliders.Length != 0)
         {
@@ -89,19 +90,20 @@ public class HoneyChunk : MonoBehaviour
         List<Vector3> allVertices = new List<Vector3>();
         List<int> allIndices = new List<int>();
 
-        foreach (var collider in colliders)
+        foreach (Collider collider in colliders)
         {
-            MeshCollider meshCollider = collider as MeshCollider;
-            if (meshCollider != null && meshCollider.sharedMesh != null)
+            if (collider.gameObject.TryGetComponent<MeshFilter>(out var meshFilter))
             {
-                Mesh mesh = meshCollider.sharedMesh;
+                Mesh colliderMesh = meshFilter.sharedMesh;
+
+                Vector3[] vertices = (Vector3[])colliderMesh.vertices.Clone();
+
+                collider.gameObject.transform.TransformPoints(vertices);
 
                 // Add vertices
-                int vertexOffset = allVertices.Count;
-                allVertices.AddRange(mesh.vertices);
+                allVertices.AddRange(vertices);
 
-                // Add indices with offset
-                allIndices.AddRange(mesh.triangles.Select(index => index + vertexOffset));
+                allIndices.AddRange(colliderMesh.triangles);
             }
         }
 
@@ -115,10 +117,7 @@ public class HoneyChunk : MonoBehaviour
         {
             colliderVertices = new ComputeBuffer(allVertices.Count, sizeof(float) * 3);
             colliderVertices.SetData(allVertices);
-        }
 
-        if (allIndices.Count > 0)
-        {
             colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
             colliderIndices.SetData(allIndices);
         }
@@ -157,16 +156,13 @@ public class HoneyChunk : MonoBehaviour
         {
             float density = densityValues[i].w;
 
-            if (density > 0)
-            {
-                gizmosColor.r = density;
-                gizmosColor.g = density;
-                gizmosColor.b = density;
+            gizmosColor.r = density;
+            gizmosColor.g = density;
+            gizmosColor.b = density;
 
-                Gizmos.color = gizmosColor;
-                Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
-                Gizmos.DrawSphere(pos, 0.1f);
-            }
+            Gizmos.color = gizmosColor;
+            Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
+            Gizmos.DrawSphere(pos, 0.1f);
         }
     }
 

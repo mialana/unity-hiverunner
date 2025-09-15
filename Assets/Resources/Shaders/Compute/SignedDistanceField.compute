@@ -3,22 +3,87 @@
 
 #include "Common.hlsl"
 
-RWStructuredBuffer<float4> points;
+// static const float INFINITY = 1000000.f;
 
-RWStructuredBuffer<float4> colliderVertices;
-RWStructuredBuffer<float4> colliderIndices;
+RWStructuredBuffer<float4> points; // Voxel positions (x, y, z, value)
+RWStructuredBuffer<float3> colliderVertices; // Mesh vertices
+RWStructuredBuffer<int> colliderIndices; // Mesh triangle indices
 
-float3 voxelsPerAxis;
+float3 voxelsPerAxis; // Number of voxels along each axis
+
+bool RayIntersectsTriangle(float3 rayOrigin, float3 rayDir,
+                           float3 v0, float3 v1, float3 v2)
+{
+    bool hit = false;
+
+    float3 edge1 = v1 - v0;
+    float3 edge2 = v2 - v0;
+    float3 h = cross(rayDir, edge2);
+    float a = dot(edge1, h);
+
+    if (abs(a) >= 0.00001) // not parallel
+    {
+        float f = 1.0 / a;
+        float3 s = rayOrigin - v0;
+        float u = f * dot(s, h);
+
+        if (u >= 0.0f && u <= 1.0f) // inside edge
+        {
+            float3 q = cross(s, edge1);
+            float v = f * dot(rayDir, q);
+
+            if (v >= 0.0f && (u + v) <= 1.0f) // inside face
+            {
+                float t = f * dot(edge2, q);
+
+                if (t > 0.0) // in front of ray origin
+                {
+                    hit = true;
+                }
+            }
+        }
+    }
+
+    return hit;
+}
 
 [numthreads(blockSize, blockSize, blockSize)]
 void SDF (int3 id : SV_DispatchThreadID)
 {
-    if (id.x >= voxelsPerAxis.x || id.y >= voxelsPerAxis.y || id.z >= voxelsPerAxis.z) {
-        return;
-    }
-    
+    // Ensure the thread ID is within the voxel grid bounds
+    if (id.x >= voxelsPerAxis.x || id.y >= voxelsPerAxis.y || id.z >= voxelsPerAxis.z)
+    return;
+
+    // Compute the linear index of the voxel
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
 
-    float4 temp = points[index];
-    points[index] = float4(temp.x, temp.y, temp.z, temp.w+0.1);
+    // Get the center of the current voxel
+    float4 currPoint = points[index];
+
+    // Initialize the intersection count and minimum distance
+    uint intersectionCount = 0;
+
+    // Iterate through all triangles in the mesh
+    for (uint i = 0; i < colliderIndices.Length; i += 3)
+    {
+        // Get the triangle vertices
+        float3 v0 = colliderVertices[colliderIndices[i]];
+        float3 v1 = colliderVertices[colliderIndices[i + 1]];
+        float3 v2 = colliderVertices[colliderIndices[i + 2]];
+
+        // Perform a raycast along the +X direction
+        if (RayIntersectsTriangle(currPoint.xyz, float3(1, 0, 0), v0, v1, v2))
+        {
+            intersectionCount++;
+        }
+    }
+
+    // Determine if the voxel is inside or outside the mesh
+    int scalar = intersectionCount & 1; // 0 if outside mesh, 1 if inside
+    scalar = 1 - scalar;
+
+    float newDensity = currPoint.w * scalar;
+
+    // Update the voxel value with the signed distance
+    points[index] = float4(currPoint.xyz, newDensity);
 }

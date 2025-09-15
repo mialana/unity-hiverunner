@@ -79,7 +79,8 @@ public class HoneyGenerator : MonoBehaviour
     {
         if (debugMode)
         {
-            voxelSize = Mathf.Max(2f); // in debug mode voxels are large
+            voxelSize = Mathf.Max(2f, voxelSize); // in debug mode voxels are large
+            updateInterval = Mathf.Max(1f, updateInterval); // in debug model set updateInterval high
         }
 
         if (chunkHolder == null)
@@ -125,7 +126,7 @@ public class HoneyGenerator : MonoBehaviour
         MeshFilter filter = gameObject.GetOrAddComponent<MeshFilter>();
 
         Mesh mesh = new() { name = "HoneyMesh" };
-        filter.mesh = mesh;
+        filter.sharedMesh = mesh;
 
         MeshRenderer renderer = gameObject.GetOrAddComponent<MeshRenderer>();
         renderer.material = honeyMat;
@@ -200,7 +201,7 @@ public class HoneyGenerator : MonoBehaviour
             Mathf.CeilToInt(chunk.voxelsPerAxis[2] / blockSize.z)
         );
 
-        signedDistanceFieldShader.Dispatch(0, gridSize[0], gridSize[1], gridSize[2]);
+        signedDistanceFieldShader.Dispatch(0, gridSize.x, gridSize.y, gridSize.z);
     }
 
     private void UpdateChunkMesh(HoneyChunk chunk)
@@ -218,12 +219,12 @@ public class HoneyGenerator : MonoBehaviour
             chunk.voxelSize
         );
 
+        ScaleBySDF(chunk);
+
         if (debugMode)
         { // store density values within chunk for debugging
             pointsBuffer.GetData(chunk.densityValues);
         }
-
-        ScaleBySDF(chunk);
 
         indexBuffer.SetCounterValue(0);
         marchingCubesShader.SetBuffer(0, "points", pointsBuffer);

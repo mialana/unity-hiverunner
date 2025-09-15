@@ -26,6 +26,7 @@ void Density (int3 id : SV_DispatchThreadID)
     // Gradually oscillate the height of the honey over time
     float heightFactor = time * 0.05f; // Oscillates between -0.5 and 0.5 every 10 seconds
 
+    // higher in y is lower in finalVal
     float finalVal = (1.f - (pos.y - (chunkCenter.y - chunkSize.y / 2)) / chunkSize.y);
     // finalVal += heightFactor;
 
