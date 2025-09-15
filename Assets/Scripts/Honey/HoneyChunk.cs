@@ -89,21 +89,25 @@ public class HoneyChunk : MonoBehaviour
     {
         List<Vector3> allVertices = new List<Vector3>();
         List<int> allIndices = new List<int>();
+        int vertexOffset = 0;
 
         foreach (Collider collider in colliders)
         {
             if (collider.gameObject.TryGetComponent<MeshFilter>(out var meshFilter))
             {
                 Mesh colliderMesh = meshFilter.sharedMesh;
-
                 Vector3[] vertices = (Vector3[])colliderMesh.vertices.Clone();
-
                 collider.gameObject.transform.TransformPoints(vertices);
 
-                // Add vertices
                 allVertices.AddRange(vertices);
 
-                allIndices.AddRange(colliderMesh.triangles);
+                // Offset indices by the current vertex count.
+                foreach (var index in colliderMesh.triangles)
+                {
+                    allIndices.Add(index + vertexOffset);
+                }
+
+                vertexOffset += vertices.Length;
             }
         }
 
