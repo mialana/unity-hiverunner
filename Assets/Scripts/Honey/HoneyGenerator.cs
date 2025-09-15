@@ -27,6 +27,7 @@ public class HoneyGenerator : MonoBehaviour
     public BaseDensityGenerator densityGenerator;
     public GameObject chunkHolder;
     public ComputeShader marchingCubesShader;
+    public ComputeShader signedDistanceFieldShader;
     public Material honeyMat;
 
     public bool debugMode = true;
@@ -72,7 +73,6 @@ public class HoneyGenerator : MonoBehaviour
     void OnDestroy()
     {
         ReleaseBuffers();
-        ReleaseTableBuffers();
     }
 
     private void Init()
@@ -113,6 +113,12 @@ public class HoneyGenerator : MonoBehaviour
         {
             marchingCubesShader =
                 Resources.Load("Shaders/Compute/MarchingCubes", typeof(ComputeShader))
+                as ComputeShader;
+        }
+        if (marchingCubesShader == null)
+        {
+            signedDistanceFieldShader =
+                Resources.Load("Shaders/Compute/SignedDistanceField", typeof(ComputeShader))
                 as ComputeShader;
         }
 
@@ -174,6 +180,13 @@ public class HoneyGenerator : MonoBehaviour
         chunks.Add(newChunk);
     }
 
+    private void ScaleBySDF(HoneyChunk chunk)
+    {
+        signedDistanceFieldShader.SetBuffer(0, "points", pointsBuffer);
+        signedDistanceFieldShader.SetBuffer(0, "colliderVertices", chunk.colliderVertices);
+        signedDistanceFieldShader.SetBuffer(0, "colliderIndices", chunk.colliderIndices);
+    }
+
     private void UpdateChunkMesh(HoneyChunk chunk)
     {
         worldMin = new(xRange[0], yCutoff, zRange[0]);
@@ -193,6 +206,8 @@ public class HoneyGenerator : MonoBehaviour
         { // store density values within chunk for debugging
             pointsBuffer.GetData(chunk.densityValues);
         }
+
+        ScaleBySDF(chunk);
 
         indexBuffer.SetCounterValue(0);
         marchingCubesShader.SetBuffer(0, "points", pointsBuffer);
@@ -282,12 +297,7 @@ public class HoneyGenerator : MonoBehaviour
             indexBuffer = null;
             countBuffer = null;
         }
-    }
 
-    void PrepareTableBuffer() { }
-
-    void ReleaseTableBuffers()
-    {
         triangulationTableBuffer?.Release();
         triangulationTableBuffer = null;
     }

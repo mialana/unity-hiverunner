@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -9,6 +11,8 @@ public class HoneyChunk : MonoBehaviour
     public Bounds bounds;
 
     private Collider[] colliders;
+    public ComputeBuffer colliderVertices;
+    public ComputeBuffer colliderIndices;
 
     [HideInInspector]
     public Mesh mesh;
@@ -22,14 +26,6 @@ public class HoneyChunk : MonoBehaviour
     // Call after bounds are set
     public void SetUp(Material mat, bool debugMode)
     {
-        // detect overlapping colliders
-        colliders = Physics.OverlapBox(center: bounds.center, halfExtents: bounds.extents);
-        if (colliders.Length != 0)
-        {
-            foreach (Collider c in colliders)
-                Debug.Log($"Found an object: {c.gameObject.name}");
-        }
-
         Vector3 size = bounds.size;
         voxelsPerAxis[0] = Mathf.CeilToInt(size.x / voxelSize) + 1;
         voxelsPerAxis[1] = Mathf.CeilToInt(size.y / voxelSize) + 1;
@@ -51,6 +47,10 @@ public class HoneyChunk : MonoBehaviour
         if (meshCollider == null)
         {
             meshCollider = gameObject.AddComponent<MeshCollider>();
+            meshCollider.convex = true;
+            meshCollider.isTrigger = true;
+            Rigidbody rb = gameObject.AddComponent<Rigidbody>();
+            rb.useGravity = false;
         }
 
         mesh = meshFilter.sharedMesh;
@@ -61,15 +61,9 @@ public class HoneyChunk : MonoBehaviour
             meshFilter.sharedMesh = mesh;
         }
 
-        if (meshCollider.sharedMesh == null)
-        {
-            meshCollider.sharedMesh = mesh;
-        }
-        // force update
-        meshCollider.enabled = false;
-        meshCollider.enabled = true;
-
         meshRenderer.material = mat;
+
+        FindChunkColliders();
 
         if (debugMode)
         {
@@ -80,7 +74,64 @@ public class HoneyChunk : MonoBehaviour
     }
 
     // Update is called once per frame
-    public void UpdateHoneyGrowth() { }
+    private void FindChunkColliders()
+    {
+        // detect overlapping colliderscolliders[i].gameObject.
+        colliders = Physics.OverlapBox(center: bounds.center, halfExtents: bounds.extents);
+        if (colliders.Length != 0)
+        {
+            BuildComputeBuffers();
+        }
+    }
+
+    private void BuildComputeBuffers()
+    {
+        List<Vector3> allVertices = new List<Vector3>();
+        List<int> allIndices = new List<int>();
+
+        foreach (var collider in colliders)
+        {
+            MeshCollider meshCollider = collider as MeshCollider;
+            if (meshCollider != null && meshCollider.sharedMesh != null)
+            {
+                Mesh mesh = meshCollider.sharedMesh;
+
+                // Add vertices
+                int vertexOffset = allVertices.Count;
+                allVertices.AddRange(mesh.vertices);
+
+                // Add indices with offset
+                allIndices.AddRange(mesh.triangles.Select(index => index + vertexOffset));
+            }
+        }
+
+        // Create and populate compute buffers
+        if (colliderVertices != null)
+            colliderVertices.Release();
+        if (colliderIndices != null)
+            colliderIndices.Release();
+
+        colliderVertices = new ComputeBuffer(allVertices.Count, sizeof(float) * 3);
+        colliderVertices.SetData(allVertices);
+
+        colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
+        colliderIndices.SetData(allIndices);
+    }
+
+    private void ReleaseComputeBuffers()
+    {
+        if (colliderVertices != null)
+        {
+            colliderVertices.Release();
+            colliderVertices = null;
+        }
+
+        if (colliderIndices != null)
+        {
+            colliderIndices.Release();
+            colliderIndices = null;
+        }
+    }
 
     void OnDrawGizmos()
     {
@@ -111,6 +162,11 @@ public class HoneyChunk : MonoBehaviour
                 Gizmos.DrawSphere(pos, 0.1f);
             }
         }
+    }
+
+    private void OnDestroy()
+    {
+        ReleaseComputeBuffers();
     }
 
     public void OnApplicationQuit()
