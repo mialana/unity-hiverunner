@@ -3,8 +3,6 @@
 
 #include "Common.hlsl"
 
-static const int blockSize = 8;
-
 RWStructuredBuffer<float4> points;
 float3 voxelsPerAxis;
 float3 worldMin;

@@ -4,8 +4,6 @@
 
 #include "Common.hlsl"
 
-static const int blockSize = 8;
-
 AppendStructuredBuffer<Triangle> triangles;
 RWStructuredBuffer<float4> points;
 

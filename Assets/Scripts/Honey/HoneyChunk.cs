@@ -111,11 +111,17 @@ public class HoneyChunk : MonoBehaviour
         if (colliderIndices != null)
             colliderIndices.Release();
 
-        colliderVertices = new ComputeBuffer(allVertices.Count, sizeof(float) * 3);
-        colliderVertices.SetData(allVertices);
+        if (allVertices.Count > 0)
+        {
+            colliderVertices = new ComputeBuffer(allVertices.Count, sizeof(float) * 3);
+            colliderVertices.SetData(allVertices);
+        }
 
-        colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
-        colliderIndices.SetData(allIndices);
+        if (allIndices.Count > 0)
+        {
+            colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
+            colliderIndices.SetData(allIndices);
+        }
     }
 
     private void ReleaseComputeBuffers()

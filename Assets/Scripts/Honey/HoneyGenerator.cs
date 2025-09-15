@@ -115,7 +115,7 @@ public class HoneyGenerator : MonoBehaviour
                 Resources.Load("Shaders/Compute/MarchingCubes", typeof(ComputeShader))
                 as ComputeShader;
         }
-        if (marchingCubesShader == null)
+        if (signedDistanceFieldShader == null)
         {
             signedDistanceFieldShader =
                 Resources.Load("Shaders/Compute/SignedDistanceField", typeof(ComputeShader))
@@ -182,9 +182,25 @@ public class HoneyGenerator : MonoBehaviour
 
     private void ScaleBySDF(HoneyChunk chunk)
     {
+        if (chunk.colliderVertices == null || chunk.colliderIndices == null)
+        {
+            return;
+        }
+
         signedDistanceFieldShader.SetBuffer(0, "points", pointsBuffer);
         signedDistanceFieldShader.SetBuffer(0, "colliderVertices", chunk.colliderVertices);
         signedDistanceFieldShader.SetBuffer(0, "colliderIndices", chunk.colliderIndices);
+
+        signedDistanceFieldShader.SetVector("voxelsPerAxis", (Vector3)chunk.voxelsPerAxis);
+
+        Vector3 blockSize = Common.GetBlockSize(signedDistanceFieldShader, "SDF");
+        Vector3Int gridSize = new(
+            Mathf.CeilToInt(chunk.voxelsPerAxis[0] / blockSize.x),
+            Mathf.CeilToInt(chunk.voxelsPerAxis[1] / blockSize.y),
+            Mathf.CeilToInt(chunk.voxelsPerAxis[2] / blockSize.z)
+        );
+
+        signedDistanceFieldShader.Dispatch(0, gridSize[0], gridSize[1], gridSize[2]);
     }
 
     private void UpdateChunkMesh(HoneyChunk chunk)

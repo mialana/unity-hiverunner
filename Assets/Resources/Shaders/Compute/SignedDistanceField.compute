@@ -1,19 +1,24 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel SDF
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+#include "Common.hlsl"
 
-float4 pointBuffer;
+RWStructuredBuffer<float4> points;
 
-float4 objectPointBuffer;
-float
+RWStructuredBuffer<float4> colliderVertices;
+RWStructuredBuffer<float4> colliderIndices;
 
-[numthreads(8,8,1)]
-void SDF (uint3 id : SV_DispatchThreadID)
+float3 voxelsPerAxis;
+
+[numthreads(blockSize, blockSize, blockSize)]
+void SDF (int3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    if (id.x >= voxelsPerAxis.x || id.y >= voxelsPerAxis.y || id.z >= voxelsPerAxis.z) {
+        return;
+    }
+    
+    int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    float4 temp = points[index];
+    points[index] = float4(temp.x, temp.y, temp.z, temp.w+0.1);
 }

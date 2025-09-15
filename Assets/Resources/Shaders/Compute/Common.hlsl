@@ -1,3 +1,5 @@
+static const int blockSize = 8;
+
 float3 interpolateVerts(float4 v1, float4 v2, float isoLevel) {
     float t = (isoLevel - v1.w) / (v2.w - v1.w);
     return v1.xyz + t * (v2.xyz - v1.xyz);
