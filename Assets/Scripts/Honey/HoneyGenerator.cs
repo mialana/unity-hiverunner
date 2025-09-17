@@ -19,10 +19,10 @@ public class HoneyGenerator : MonoBehaviour
     private Vector3 chunkSize = new(20, 20, 20);
     private List<HoneyChunk> chunks;
 
-    public float voxelSize = 0.5f;
+    public float voxelSize = 0.25f;
 
     private float nextUpdateTime = 0.0f;
-    public float updateInterval = 0.01f;
+    public float updateInterval = 0.1f;
 
     public BaseDensityGenerator densityGenerator;
     public GameObject chunkHolder;
@@ -128,10 +128,12 @@ public class HoneyGenerator : MonoBehaviour
     {
         for (float x = xRange[0]; x < xRange[1]; x += chunkSize[0])
         {
-            for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
+            for (float y = yRange[0]; y < yRange[1]; y += chunkSize[0])
             {
-                float y = yCutoff; // only need one row of y.
-                CreateChunk(new Vector3(x, y, z));
+                for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
+                {
+                    CreateChunk(new Vector3(x, y, z));
+                }
             }
         }
     }
@@ -198,7 +200,7 @@ public class HoneyGenerator : MonoBehaviour
 
     private void UpdateChunkMesh(HoneyChunk chunk)
     {
-        worldMin = new(xRange[0], yCutoff, zRange[0]);
+        worldMin = new(xRange[0], yRange[0], zRange[0]);
         worldMax = new(xRange[1], yRange[1], zRange[1]);
 
         pointsBuffer = densityGenerator.Generate(

@@ -13,6 +13,60 @@ float voxelSize;
 
 float time;
 
+float hash31(float3 p) {
+    p = frac(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float noise(float3 p) {
+    float3 i = floor(p);
+    float3 f = frac(p);
+
+    // trilinear interpolation
+    float n000 = hash31(i + float3(0, 0, 0));
+    float n100 = hash31(i + float3(1, 0, 0));
+    float n010 = hash31(i + float3(0, 1, 0));
+    float n110 = hash31(i + float3(1, 1, 0));
+    float n001 = hash31(i + float3(0, 0, 1));
+    float n101 = hash31(i + float3(1, 0, 1));
+    float n011 = hash31(i + float3(0, 1, 1));
+    float n111 = hash31(i + float3(1, 1, 1));
+
+    float3 u = f * f * (3.0 - 2.0 * f);
+
+    return lerp(
+    lerp(lerp(n000, n100, u.x), lerp(n010, n110, u.x), u.y),
+    lerp(lerp(n001, n101, u.x), lerp(n011, n111, u.x), u.y),
+    u.z);
+}
+
+float ridge(float n) {
+    n = abs(n); // fold
+    n = 1.0 - n; // invert
+    return n * n; // sharpen ridges
+}
+
+float ridgedMF(float3 p) {
+    float sum = 0.0;
+    float freq = 0.5;
+    float amp = 0.5;
+    float prev = 1.0;
+
+    for (int i = 0; i < 3; i ++) { // ~5 octaves
+        float n = noise(p * freq);
+        float r = ridge(n);
+
+        sum += r * amp * prev;
+
+        prev = r;
+        freq *= 2.0;
+        amp *= 0.5;
+    }
+    return sum;
+}
+
+
 [numthreads(blockSize, blockSize, blockSize)]
 void Density (int3 id : SV_DispatchThreadID)
 {
@@ -21,29 +75,22 @@ void Density (int3 id : SV_DispatchThreadID)
     }
 
     float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
-    pos = min(worldMax, pos);
+    // ensure position is inside world bounds (use both min and max)
+    pos = clamp(pos, worldMin, worldMax);
 
-    // Gradually oscillate the height of the honey over time
-    float heightFactor = time * 0.05f; // Oscillates between -0.5 and 0.5 every 10 seconds
+    float heightFactor = time * 0.001f;
 
-    // higher in y is lower in finalVal
-    float finalVal = (1.f - (pos.y - (chunkCenter.y - chunkSize.y / 2)) / chunkSize.y);
-    // finalVal += heightFactor;
+    float worldHeight = max(0.0001f, worldMax.y - worldMin.y);
+    float finalVal = 1.f - (pos.y - worldMin.y) / worldHeight;
+
+    finalVal += heightFactor;
 
     // Add sinusoidal noise based on position
     float noise = sin(pos.x * 0.5f + time * 0.2f) * sin(pos.z * 0.7f + time * 0.3f) * 0.07f;
 
-    finalVal += noise;
+    float ridged = ridgedMF(pos + time * 0.01);
+    finalVal += ridged * 0.1; // scale ridged noise strength
 
-    // Explicitly set density to zero near x and z walls
-    // float threshold = 0.5f; // Distance threshold from walls
-    // if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold ||
-    // abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
-    // {
-    //     finalVal = 0.0f;
-    // }
-
-    // Clamp the final value to ensure it stays within a valid range
     finalVal = clamp(finalVal, 0.f, 1.f);
 
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
