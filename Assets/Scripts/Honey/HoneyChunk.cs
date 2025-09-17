@@ -16,12 +16,9 @@ public class HoneyChunk : MonoBehaviour
     public ComputeBuffer colliderIndices;
 
     [HideInInspector]
-    public Mesh mesh;
-
-    MeshFilter meshFilter;
-    MeshRenderer meshRenderer;
-    MeshCollider meshCollider;
-
+    public MeshFilter meshFilter;
+    public MeshRenderer meshRenderer;
+    public MeshCollider meshCollider;
     public Vector4[] densityValues;
 
     // Call after bounds are set
@@ -48,18 +45,15 @@ public class HoneyChunk : MonoBehaviour
         if (meshCollider == null)
         {
             meshCollider = gameObject.AddComponent<MeshCollider>();
-            meshCollider.convex = true;
-            meshCollider.isTrigger = true;
-            Rigidbody rb = gameObject.AddComponent<Rigidbody>();
-            rb.useGravity = false;
         }
 
-        mesh = meshFilter.sharedMesh;
+        Mesh mesh = meshFilter.sharedMesh;
         if (mesh == null)
         {
             mesh = new Mesh();
+            mesh.name = $"Chunk Mesh {bounds.center}";
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            meshFilter.sharedMesh = mesh;
+            meshFilter.sharedMesh = mesh; // set up mesh in only mesh filter
         }
 
         meshRenderer.material = mat;
@@ -93,6 +87,7 @@ public class HoneyChunk : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
+            // Debug.Log(collider.name);
             if (collider.gameObject.TryGetComponent<MeshFilter>(out var meshFilter))
             {
                 Mesh colliderMesh = meshFilter.sharedMesh;

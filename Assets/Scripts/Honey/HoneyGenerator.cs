@@ -122,14 +122,6 @@ public class HoneyGenerator : MonoBehaviour
                 Resources.Load("Shaders/Compute/SignedDistanceField", typeof(ComputeShader))
                 as ComputeShader;
         }
-
-        MeshFilter filter = gameObject.GetOrAddComponent<MeshFilter>();
-
-        Mesh mesh = new() { name = "HoneyMesh" };
-        filter.sharedMesh = mesh;
-
-        MeshRenderer renderer = gameObject.GetOrAddComponent<MeshRenderer>();
-        renderer.material = honeyMat;
     }
 
     private void CreateAllChunks()
@@ -253,9 +245,6 @@ public class HoneyGenerator : MonoBehaviour
         Triangle[] tris = new Triangle[numTris];
         indexBuffer.GetData(tris, 0, 0, numTris);
 
-        Mesh mesh = chunk.mesh;
-        mesh.Clear();
-
         var vertices = new Vector3[numTris * 3];
         var meshTriangles = new int[numTris * 3];
 
@@ -267,10 +256,17 @@ public class HoneyGenerator : MonoBehaviour
                 vertices[i * 3 + j] = tris[i][j];
             }
         }
+
+        MeshCollider meshCollider = chunk.meshCollider;
+        Mesh mesh = chunk.meshFilter.sharedMesh;
+        mesh.Clear();
+
         mesh.vertices = vertices;
         mesh.triangles = meshTriangles;
 
         mesh.RecalculateNormals();
+
+        meshCollider.sharedMesh = mesh;
     }
 
     void PrepareBuffers()
