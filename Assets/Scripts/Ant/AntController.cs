@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("References")]
-    public Rigidbody rb;
+    private Rigidbody rb;
     public Camera antCamera;
 
     [Header("Configurations")]
@@ -33,7 +33,7 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Locked;
 
-        // rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
         // transform.eulerAngles = new(0, 90f, 0);
         rb.freezeRotation = true;
     }
