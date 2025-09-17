@@ -1,15 +1,16 @@
+using NUnit.Framework;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("References")]
-    private Rigidbody rb;
+    public Rigidbody rb;
     public Camera antCamera;
 
     [Header("Configurations")]
-    public float walkSpeed;
-    public float runSpeed;
-    public float jumpSpeed;
+    public float walkSpeed = 5f;
+    public float runSpeed = 7f;
+    public float jumpSpeed = 10f;
 
     [Header("Runtime")]
     Vector3 newVelocity;
@@ -22,13 +23,18 @@ public class PlayerController : MonoBehaviour
 
     float pitch = 0f;
 
+    // Orbit parameters
+    float cameraDistance = 10f; // how far behind the ant
+    float cameraHeight = 1f; // vertical offset above the ant
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.Locked;
 
-        rb = GetComponent<Rigidbody>();
+        // rb = GetComponent<Rigidbody>();
+        // transform.eulerAngles = new(0, 90f, 0);
         rb.freezeRotation = true;
     }
 
@@ -51,7 +57,6 @@ public class PlayerController : MonoBehaviour
         }
 
         rb.linearVelocity = transform.TransformDirection(newVelocity);
-        transform.rotation = Quaternion.identity;
     }
 
     void LateUpdate()
@@ -61,13 +66,10 @@ public class PlayerController : MonoBehaviour
         pitch -= mouseY * 5f;
         pitch = Mathf.Clamp(pitch, 0f, 40f);
 
-        // Orbit parameters
-        float distance = 5f; // how far behind the ant
-        float height = 1f; // vertical offset above the ant
-
         // Compute rotation from pitch and position the camera
         Quaternion rot = Quaternion.Euler(pitch, 0f, 0f);
-        Vector3 orbitOffset = rot * new Vector3(0f, 0f, -distance) + new Vector3(0f, height, 0f);
+        Vector3 orbitOffset =
+            rot * new Vector3(0f, 0f, -cameraDistance) + new Vector3(0f, cameraHeight, 0f);
         antCamera.transform.position = transform.position + orbitOffset;
 
         // Make camera look at the ant, factoring in its height
