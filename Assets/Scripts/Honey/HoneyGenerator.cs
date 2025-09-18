@@ -42,9 +42,9 @@ public class HoneyGenerator : MonoBehaviour
     private int currentTopRow;
     public int visibleRows = 3; // how many rows to keep at once
 
-    float honeyRiseRate = 0.002f;
-    float minLevelBelowPlayer = 15f;
-    public float averageHoneyLevel;
+    public float honeyRiseRate = 0.002f;
+    public float minLevelBelowPlayer = 15f;
+    public float averageHoneyLevel = 0f;
 
     void Awake()
     {
