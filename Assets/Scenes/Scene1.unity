@@ -915,9 +915,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 390303869}
   hiveCellPrefab: {fileID: 919132149155446097, guid: 374de7bb48fd2bea9b41e94dc15895ca, type: 3}
-  rows: 3
+  rows: 5
   cullDistance: 2
   bufferRows: 2
+  seed: 11513
 --- !u!4 &1912899174
 Transform:
   m_ObjectHideFlags: 0

@@ -8,6 +8,13 @@ public class HiveCell : MonoBehaviour
     // Store children in clockwise order
     public GameObject[] walls; // size 6
 
+    Material hiveMat;
+
+    void Awake()
+    {
+        hiveMat = Resources.Load("Materials/HiveMat", typeof(Material)) as Material;
+    }
+
     public void Init(int r, int c)
     {
         row = r;
@@ -20,6 +27,11 @@ public class HiveCell : MonoBehaviour
         walls[3] = transform.Find("geo_down").gameObject;
         walls[4] = transform.Find("geo_downLeft").gameObject;
         walls[5] = transform.Find("geo_upLeft").gameObject;
+
+        foreach (GameObject w in walls)
+        {
+            w.GetComponent<MeshRenderer>().material = hiveMat;
+        }
     }
 
     public void SetWall(int dir, bool active)

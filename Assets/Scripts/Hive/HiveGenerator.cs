@@ -8,7 +8,7 @@ public class HiveGenerator : MonoBehaviour
     public GameObject player;
 
     public GameObject hiveCellPrefab;
-    public int rows = 3; // how many rows to generate at start
+    public int rows = 5; // how many rows to generate at start
 
     readonly float cellWidth = 11.25f; // horizontal spacing between neighbors in same row
     readonly float rowHeight = 10f; // vertical spacing between rows
@@ -20,6 +20,12 @@ public class HiveGenerator : MonoBehaviour
 
     int highestRow = -1; // keep track of the top row generated
     HashSet<int> activeRows = new();
+
+    int lastBridgeCol = -1;
+    int lastBridgeDir = -1; // 0 = topLeft, 1 = topRight
+
+    public int seed = 12345; // exposed in inspector
+    private System.Random rng; // local PRNG
 
     void Awake()
     {
@@ -39,6 +45,7 @@ public class HiveGenerator : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        rng = new System.Random(seed);
         GenerateHive();
     }
 
@@ -132,6 +139,67 @@ public class HiveGenerator : MonoBehaviour
             {
                 cell.SetWall(5, false);
                 cell.SetWall(1, false);
+            }
+        }
+
+        // Connect from the previous row to this one if possible
+        if (lastBridgeCol >= 0)
+        {
+            int thisBridgeCol;
+            if (lastBridgeDir == 0)
+            {
+                thisBridgeCol = lastBridgeCol - 1;
+                if (
+                    cells.TryGetValue(
+                        new Vector2Int(r, thisBridgeCol),
+                        out HiveCell lowerTargetCell
+                    )
+                )
+                {
+                    lowerTargetCell.SetWall(2, false);
+                }
+            }
+            else
+            {
+                thisBridgeCol = lastBridgeCol + 1;
+                if (
+                    cells.TryGetValue(
+                        new Vector2Int(r, thisBridgeCol),
+                        out HiveCell lowerTargetCell
+                    )
+                )
+                {
+                    lowerTargetCell.SetWall(4, false);
+                }
+            }
+        }
+
+        // Choose a new bridge for this row (only even columns)
+        int[] evenCols = { 0, 2, 4, 6 };
+        lastBridgeCol = evenCols[rng.Next(0, evenCols.Length)];
+
+        if (lastBridgeCol == 0)
+        {
+            lastBridgeDir = 1;
+        }
+        else if (lastBridgeCol == 6)
+        {
+            lastBridgeDir = 0;
+        }
+        else
+        {
+            lastBridgeDir = rng.Next(0, 2); // 0=topLeft, 1=topRight
+        }
+
+        if (cells.TryGetValue(new Vector2Int(r, lastBridgeCol), out HiveCell upperTargetCell))
+        {
+            if (lastBridgeDir == 0)
+            {
+                upperTargetCell.SetWall(5, false);
+            }
+            else
+            {
+                upperTargetCell.SetWall(1, false);
             }
         }
 
