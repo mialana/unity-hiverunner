@@ -78,20 +78,30 @@ void Density (int3 id : SV_DispatchThreadID)
     // ensure position is inside world bounds (use both min and max)
     pos = clamp(pos, worldMin, worldMax);
 
-    float heightFactor = time * 0.001f;
+    float heightFactor = time * 0.005f;
 
     float worldHeight = max(0.0001f, worldMax.y - worldMin.y);
-    float finalVal = 1.f - (pos.y - worldMin.y) / worldHeight;
+    float val = 1.f - (pos.y - worldMin.y) / worldHeight;
 
-    finalVal += heightFactor;
+    float finalVal = val + heightFactor;
 
     // Add sinusoidal noise based on position
-    float noise = sin(pos.x * 0.5f + time * 0.2f) * sin(pos.z * 0.7f + time * 0.3f) * 0.07f;
+    float noise = sin(pos.x * 0.5f + time * 0.5f) * sin(pos.z * 0.7f + time * 0.5f) * 0.02f;
 
-    float ridged = ridgedMF(pos + time * 0.01);
-    finalVal += ridged * 0.1; // scale ridged noise strength
+    float ridged = ridgedMF((pos - 0.1f) + time * 0.1);
+    finalVal += ridged * 0.2; // scale ridged noise strength
+    finalVal += noise;
 
+    finalVal = clamp(finalVal, val - 0.01f, finalVal);
     finalVal = clamp(finalVal, 0.f, 1.f);
+
+    float threshold = 0.25f; // Distance threshold from walls
+
+    if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold || 
+    abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
+    {
+        finalVal = 0.0f;
+    }
 
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
     points[index] = float4(pos, finalVal);

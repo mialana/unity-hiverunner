@@ -9,10 +9,12 @@ public class HiveCell : MonoBehaviour
     public GameObject[] walls; // size 6
 
     Material hiveMat;
+    Material hiveMatBack;
 
     void Awake()
     {
         hiveMat = Resources.Load("Materials/HiveMat", typeof(Material)) as Material;
+        hiveMatBack = Resources.Load("Materials/HiveMatBack", typeof(Material)) as Material;
     }
 
     public void Init(int r, int c)
@@ -32,6 +34,9 @@ public class HiveCell : MonoBehaviour
         {
             w.GetComponent<MeshRenderer>().material = hiveMat;
         }
+
+        GameObject backWall = transform.Find("geo_back").gameObject;
+        backWall.GetComponent<MeshRenderer>().material = hiveMatBack;
     }
 
     public void SetWall(int dir, bool active)

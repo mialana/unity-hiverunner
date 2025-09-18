@@ -18,14 +18,14 @@ public class PlayerController : MonoBehaviour
     bool isJumping = false;
 
     public float minFov = 15f;
-    public float maxFov = 90f;
+    public float maxFov = 180f;
     public float sensitivity = 20f;
 
     float pitch = 0f;
 
     // Orbit parameters
-    float cameraDistance = 10f; // how far behind the ant
-    float cameraHeight = 1f; // vertical offset above the ant
+    float cameraDistance = 15f; // how far behind the ant
+    float cameraHeight = 0f; // vertical offset above the ant
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()

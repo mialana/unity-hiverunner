@@ -52,7 +52,7 @@ public class HiveGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        int playerRow = Mathf.RoundToInt((player.transform.position.y - 20f) / rowHeight);
+        int playerRow = Mathf.RoundToInt((player.transform.position.y - 15f) / rowHeight);
 
         // Cull entire rows
         int minRow = playerRow - cullDistance;
@@ -210,7 +210,7 @@ public class HiveGenerator : MonoBehaviour
     Vector3 GetPosition(int r, int c)
     {
         // Base Y is determined only by row
-        float baseY = 20f + r * rowHeight;
+        float baseY = 15f + r * rowHeight;
 
         // Spread 7 cells symmetrically: c=0 → -3*cellWidth, c=6 → +3*cellWidth
         float x = (c - 3) * cellWidth;
