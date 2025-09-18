@@ -27,6 +27,19 @@ public class PlayerController : MonoBehaviour
     float cameraDistance = 15f; // how far behind the ant
     float cameraHeight = 0f; // vertical offset above the ant
 
+    GameObject mesh;
+    GameObject controller;
+
+    Vector3 rotation;
+
+    void Awake()
+    {
+        mesh = transform.Find("ctrl_global").gameObject;
+        controller = transform.Find("cuerpo_LP").gameObject;
+
+        rotation = new Vector3(0f, 90f, 0f);
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -46,6 +59,18 @@ public class PlayerController : MonoBehaviour
         float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
         newVelocity.x = Input.GetAxis("Horizontal") * speed;
         newVelocity.z = Input.GetAxis("Vertical") * speed;
+
+        if (newVelocity.x < 0)
+        {
+            rotation.y = -90;
+        }
+        else
+        {
+            rotation.y = 90;
+        }
+
+        mesh.transform.localEulerAngles = rotation;
+        controller.transform.localEulerAngles = rotation;
 
         if (isGrounded)
         {
