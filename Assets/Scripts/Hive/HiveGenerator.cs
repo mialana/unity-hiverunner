@@ -116,6 +116,23 @@ public class HiveGenerator : MonoBehaviour
             cell.Init(r, c);
 
             cells[new Vector2Int(r, c)] = cell;
+
+            if ((c & 1) == 0) // last column should not have disabled wall
+            {
+                if (c < cols - 1)
+                {
+                    cell.SetWall(2, false);
+                }
+                if (c > 0)
+                {
+                    cell.SetWall(4, false);
+                }
+            }
+            else
+            {
+                cell.SetWall(5, false);
+                cell.SetWall(1, false);
+            }
         }
 
         activeRows.Add(r);
@@ -132,7 +149,7 @@ public class HiveGenerator : MonoBehaviour
         float y = baseY;
 
         // Apply vertical stagger to columns 0,2,4,6
-        if (c % 2 == 0)
+        if ((c & 1) == 0)
         {
             y += 5f; // tweak multiplier for how tall the offset should be
         }
