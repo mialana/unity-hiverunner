@@ -92,6 +92,6 @@ public class MainRuntime : MonoBehaviour
         if (newScore != score)
             score = newScore;
 
-        Debug.Log(score);
+        // Debug.Log(score);
     }
 }

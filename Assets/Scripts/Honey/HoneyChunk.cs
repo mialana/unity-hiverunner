@@ -139,7 +139,7 @@ public class HoneyChunk : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.black;
+        Gizmos.color = Color.white;
         Gizmos.DrawWireCube(bounds.center, bounds.size);
 
         if (densityValues == null || densityValues.Length == 0)

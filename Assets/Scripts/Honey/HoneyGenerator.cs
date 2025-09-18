@@ -1,9 +1,11 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using System.Linq;
 using UnityEngine;
 
 public class HoneyGenerator : MonoBehaviour
 {
+    public GameObject player;
+
     public Vector2 xRange = new(-50f, 50f);
     public Vector2 yRange = new(0f, 50f);
     public Vector2 zRange = new(-10f, 10f);
@@ -11,13 +13,10 @@ public class HoneyGenerator : MonoBehaviour
     private Vector3 worldMin;
     private Vector3 worldMax;
 
-    [Range(0f, 50f)]
-    public float yCutoff = 5f; // Below this y value, individual voxels for honey will be culled.
-
     public float isoLevel = 0.9f;
 
     private Vector3 chunkSize = new(20, 20, 20);
-    private List<HoneyChunk> chunks;
+    private Dictionary<Vector2Int, HoneyChunk> chunks;
 
     public float voxelSize = 0.25f;
 
@@ -39,16 +38,22 @@ public class HoneyGenerator : MonoBehaviour
 
     private ComputeBuffer triangulationTableBuffer;
 
+    private int currentBottomRow;
+    private int currentTopRow;
+    public int visibleRows = 3; // how many rows to keep at once
+
     void Awake()
     {
         Init();
-
         DestroyAllChunks();
     }
 
     void Start()
     {
-        CreateAllChunks();
+        chunks = new Dictionary<Vector2Int, HoneyChunk>();
+        currentTopRow = 0;
+
+        CreateInitialChunks();
 
         PrepareBuffers();
     }
@@ -62,7 +67,25 @@ public class HoneyGenerator : MonoBehaviour
 
             nextUpdateTime = Time.time + updateInterval;
 
-            foreach (HoneyChunk c in chunks)
+            int playerRow = Mathf.FloorToInt(player.transform.position.y / chunkSize.y);
+
+            // Always ensure we have exactly `visibleRows` rows
+            int minRow = playerRow - 1; // keep a row below player
+            int maxRow = minRow + visibleRows - 1; // and extend upwards
+
+            // Add rows above
+            while (currentTopRow < maxRow)
+            {
+                CreateRow(++currentTopRow);
+            }
+
+            // Remove rows below
+            while (currentBottomRow < minRow)
+            {
+                RemoveRow(currentBottomRow++);
+            }
+
+            foreach (HoneyChunk c in chunks.Values)
             {
                 // Debug.Log($"Updating {c.name}. Next action time is {nextUpdateTime}...");
                 UpdateChunkMesh(c);
@@ -124,16 +147,42 @@ public class HoneyGenerator : MonoBehaviour
         }
     }
 
-    private void CreateAllChunks()
+    private void CreateInitialChunks()
     {
-        for (float x = xRange[0]; x < xRange[1]; x += chunkSize[0])
+        currentBottomRow = 0;
+        for (int i = 0; i < visibleRows; i++)
         {
-            for (float y = yRange[0]; y < yRange[1]; y += chunkSize[0])
+            CreateRow(i);
+            currentTopRow = i;
+        }
+    }
+
+    private void CreateRow(int rowIndex)
+    {
+        int numX = Mathf.FloorToInt((xRange.y - xRange.x) / chunkSize.x);
+
+        for (int xi = 0; xi < numX; xi++)
+        {
+            Vector2Int coord = new Vector2Int(xi, rowIndex);
+
+            if (!chunks.ContainsKey(coord))
             {
-                for (float z = zRange[0]; z < zRange[1]; z += chunkSize[2])
-                {
-                    CreateChunk(new Vector3(x, y, z));
-                }
+                CreateChunk(coord);
+            }
+        }
+    }
+
+    private void RemoveRow(int rowIndex)
+    {
+        int numX = Mathf.FloorToInt((xRange.y - xRange.x) / chunkSize.x);
+
+        for (int xi = 0; xi < numX; xi++)
+        {
+            Vector2Int coord = new Vector2Int(xi, rowIndex);
+            if (chunks.TryGetValue(coord, out HoneyChunk chunk))
+            {
+                Destroy(chunk.gameObject);
+                chunks.Remove(coord);
             }
         }
     }
@@ -148,16 +197,13 @@ public class HoneyGenerator : MonoBehaviour
             Destroy(oldChunks[i].gameObject);
         }
 
-        chunks = new List<HoneyChunk>();
+        chunks = new Dictionary<Vector2Int, HoneyChunk>();
     }
 
-    private void CreateChunk(Vector3 minBound)
+    private void CreateChunk(Vector2Int coord)
     {
-        Vector3 maxBound = new(
-            Mathf.Min(minBound[0] + chunkSize[0], xRange[1]),
-            Mathf.Min(minBound[1] + chunkSize[1], yRange[1]),
-            Mathf.Min(minBound[2] + chunkSize[2], zRange[1])
-        );
+        Vector3 minBound = CoordToWorldMin(coord);
+        Vector3 maxBound = minBound + chunkSize;
 
         Bounds newChunkBounds = new();
         newChunkBounds.SetMinMax(minBound, maxBound);
@@ -172,7 +218,7 @@ public class HoneyGenerator : MonoBehaviour
 
         newChunk.SetUp(honeyMat, debugMode);
 
-        chunks.Add(newChunk);
+        chunks[coord] = newChunk;
     }
 
     private void ScaleBySDF(HoneyChunk chunk)
@@ -274,7 +320,7 @@ public class HoneyGenerator : MonoBehaviour
     void PrepareBuffers()
     {
         // first chunk has largest size possible
-        Vector3Int targetVoxelsPerAxis = chunks[0].voxelsPerAxis;
+        Vector3Int targetVoxelsPerAxis = chunks.First().Value.voxelsPerAxis;
         int numVoxels = targetVoxelsPerAxis.x * targetVoxelsPerAxis.y * targetVoxelsPerAxis.z;
 
         int maxTriangleCount = numVoxels * 5;
@@ -315,6 +361,15 @@ public class HoneyGenerator : MonoBehaviour
 
         triangulationTableBuffer?.Release();
         triangulationTableBuffer = null;
+    }
+
+    private Vector3 CoordToWorldMin(Vector2Int coord)
+    {
+        float x = xRange.x + coord.x * chunkSize.x;
+        float y = coord.y * chunkSize.y;
+        float z = zRange.x; // since you only have 1 chunk in z
+
+        return new Vector3(x, y, z);
     }
 
     struct Triangle
