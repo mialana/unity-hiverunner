@@ -13,7 +13,7 @@ public class HoneyGenerator : MonoBehaviour
     private Vector3 worldMin;
     private Vector3 worldMax;
 
-    public float isoLevel = 0.9f;
+    public float isoLevel = 0.5f;
 
     private Vector3 chunkSize = new(20, 20, 20);
     private Dictionary<Vector2Int, HoneyChunk> chunks;
@@ -23,7 +23,7 @@ public class HoneyGenerator : MonoBehaviour
     private float nextUpdateTime = 0.0f;
     public float updateInterval = 0.1f;
 
-    public BaseDensityGenerator densityGenerator;
+    public HoneyDensity densityGenerator;
     public GameObject chunkHolder;
     public ComputeShader marchingCubesShader;
     public ComputeShader signedDistanceFieldShader;
@@ -246,7 +246,9 @@ public class HoneyGenerator : MonoBehaviour
 
     private void UpdateChunkMesh(HoneyChunk chunk)
     {
-        worldMin = new(xRange[0], yRange[0], zRange[0]);
+        // chunks.First().Value.bounds.min.y
+
+        worldMin = new(xRange[0], chunks.First().Value.bounds.min.y, zRange[0]);
         worldMax = new(xRange[1], yRange[1], zRange[1]);
 
         pointsBuffer = densityGenerator.Generate(
@@ -256,7 +258,8 @@ public class HoneyGenerator : MonoBehaviour
             worldMax,
             chunk.bounds.size,
             chunk.bounds.center,
-            chunk.voxelSize
+            chunk.voxelSize,
+            player.transform.position.y - 10f
         );
 
         ScaleBySDF(chunk);

@@ -9,14 +9,15 @@ public class HoneyDensity : BaseDensityGenerator
             Resources.Load("Shaders/Compute/HoneyDensity", typeof(ComputeShader)) as ComputeShader;
     }
 
-    public override ComputeBuffer Generate(
+    public ComputeBuffer Generate(
         ComputeBuffer pointsBuffer,
         Vector3 voxelsPerAxis,
         Vector3 worldMin,
         Vector3 worldMax,
         Vector3 chunkSize,
         Vector3 chunkCenter,
-        float voxelSize
+        float voxelSize,
+        float honeyHeight
     )
     {
         buffersToRelease = new List<ComputeBuffer>();
@@ -24,6 +25,8 @@ public class HoneyDensity : BaseDensityGenerator
         float time = Time.time;
 
         densityShader.SetFloat("time", time);
+        densityShader.SetFloat("honeyHeight", honeyHeight); // <-- pass in
+
 
         return base.Generate(
             pointsBuffer,
