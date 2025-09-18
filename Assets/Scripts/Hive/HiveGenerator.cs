@@ -10,13 +10,13 @@ public class HiveGenerator : MonoBehaviour
     public GameObject hiveCellPrefab;
     public int rows = 3; // how many rows to generate at start
 
-    readonly float cellWidth = 22.5f; // horizontal spacing between neighbors in same row
-    readonly float rowHeight = 5f; // vertical spacing between rows
+    readonly float cellWidth = 11.25f; // horizontal spacing between neighbors in same row
+    readonly float rowHeight = 10f; // vertical spacing between rows
 
     private GameObject cellHolder;
 
-    public int cullDistance = 3; // rows below player to destroy
-    public int bufferRows = 3; // how many rows ahead of player to generate
+    public int cullDistance = 2; // rows below player to destroy
+    public int bufferRows = 2; // how many rows ahead of player to generate
 
     int highestRow = -1; // keep track of the top row generated
     HashSet<int> activeRows = new();
@@ -74,35 +74,6 @@ public class HiveGenerator : MonoBehaviour
         }
     }
 
-    void GenerateRow(int r)
-    {
-        if (activeRows.Contains(r))
-            return; // already exists
-
-        int cols = (r % 2 == 0) ? 3 : 4;
-        for (int c = 0; c < cols; c++)
-        {
-            Vector3 pos = GetPosition(r, c);
-
-            GameObject _newHiveCell = Instantiate(
-                hiveCellPrefab,
-                pos,
-                Quaternion.identity,
-                cellHolder.transform
-            );
-            _newHiveCell.name = $"Hive Cell ({r}, {c})";
-
-            HiveCell newCell = _newHiveCell.AddComponent<HiveCell>();
-
-            newCell.Init(r, c);
-
-            cells[new Vector2Int(r, c)] = newCell;
-        }
-
-        activeRows.Add(r);
-        highestRow = Mathf.Max(highestRow, r);
-    }
-
     void DestroyRow(int r)
     {
         if (!activeRows.Contains(r))
@@ -123,20 +94,47 @@ public class HiveGenerator : MonoBehaviour
         activeRows.Remove(r);
     }
 
+    void GenerateRow(int r)
+    {
+        if (activeRows.Contains(r))
+            return;
+
+        int cols = 7;
+        for (int c = 0; c < cols; c++)
+        {
+            Vector3 pos = GetPosition(r, c);
+
+            GameObject obj = Instantiate(
+                hiveCellPrefab,
+                pos,
+                Quaternion.identity,
+                cellHolder.transform
+            );
+            obj.name = $"Hive Cell ({r}, {c})";
+
+            HiveCell cell = obj.GetComponent<HiveCell>() ?? obj.AddComponent<HiveCell>();
+            cell.Init(r, c);
+
+            cells[new Vector2Int(r, c)] = cell;
+        }
+
+        activeRows.Add(r);
+        highestRow = Mathf.Max(highestRow, r);
+    }
+
     Vector3 GetPosition(int r, int c)
     {
-        float y = 20f + r * rowHeight; // 20 is base Y for row 0
-        float x;
+        // Base Y is determined only by row
+        float baseY = 20f + r * rowHeight;
 
-        if (r % 2 == 0)
+        // Spread 7 cells symmetrically: c=0 → -3*cellWidth, c=6 → +3*cellWidth
+        float x = (c - 3) * cellWidth;
+        float y = baseY;
+
+        // Apply vertical stagger to columns 0,2,4,6
+        if (c % 2 == 0)
         {
-            // Even row (3 cells, centered at -22.5, 0, 22.5)
-            x = -cellWidth + c * cellWidth; // c = 0..2
-        }
-        else
-        {
-            // Odd row (4 cells, centered at -33.75, -11.25, 11.25, 33.75)
-            x = -1.5f * cellWidth + c * cellWidth; // c = 0..3
+            y += 5f; // tweak multiplier for how tall the offset should be
         }
 
         return new Vector3(x, y, 0f);

@@ -5,10 +5,28 @@ public class HiveCell : MonoBehaviour
     public int row;
     public int col;
 
+    // Store children in clockwise order
+    public GameObject[] walls; // size 6
+
     public void Init(int r, int c)
     {
         row = r;
         col = c;
+
+        walls = new GameObject[6];
+        walls[0] = transform.Find("geo_up").gameObject;
+        walls[1] = transform.Find("geo_upRight").gameObject;
+        walls[2] = transform.Find("geo_downRight").gameObject;
+        walls[3] = transform.Find("geo_down").gameObject;
+        walls[4] = transform.Find("geo_downLeft").gameObject;
+        walls[5] = transform.Find("geo_upLeft").gameObject;
+    }
+
+    public void SetWall(int dir, bool active)
+    {
+        // dir 0..5, clockwise
+        if (walls[dir] != null)
+            walls[dir].SetActive(active);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
