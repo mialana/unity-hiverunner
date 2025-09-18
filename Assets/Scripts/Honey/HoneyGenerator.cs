@@ -44,7 +44,7 @@ public class HoneyGenerator : MonoBehaviour
 
     float honeyRiseRate = 0.003f;
     float minLevelBelowPlayer = 15f;
-    private float averageHoneyLevel;
+    public float averageHoneyLevel;
 
     void Awake()
     {

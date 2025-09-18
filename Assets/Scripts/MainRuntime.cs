@@ -32,6 +32,16 @@ public class MainRuntime : MonoBehaviour
     private int lastPlayerRow = 0;
     private float lastPeakTime = 0f;
 
+    private float honeyLevel = 0f;
+
+    // prevent repeated game-over triggers
+    private bool isGameOver = false;
+
+    // whether to pause the game when game over occurs
+    public bool pauseOnGameOver = true;
+
+    public HoneyGenerator honeyGenerator;
+
     void Awake()
     {
         if (scoreText == null && scoreTextObject != null)
@@ -62,6 +72,15 @@ public class MainRuntime : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (honeyGenerator != null)
+        {
+            honeyLevel = honeyGenerator.averageHoneyLevel;
+        }
+
+        // if game is already over, skip score updates and other gameplay
+        if (isGameOver)
+            return;
+
         float dt = Time.deltaTime;
         if (dt <= 0f)
             return;
@@ -111,10 +130,36 @@ public class MainRuntime : MonoBehaviour
         if (scoreText != null)
         {
             string s = "Score: " + score;
+            s += "\nHoney Level Y: " + (int)honeyLevel;
+            s += "\nPlayer Y: " + (int)player.transform.position.y;
             if (scoreText.text != s)
                 scoreText.text = s;
         }
 
+        // Check for game over: honey surpasses player's Y
+        if (!isGameOver && honeyLevel >= player.transform.position.y)
+        {
+            TriggerGameOver();
+        }
+
         // Debug.Log(score);
+    }
+
+    // Called once when game over condition is detected
+    private void TriggerGameOver()
+    {
+        isGameOver = true;
+
+        // show game over on the score UI if available
+        if (scoreText != null)
+            scoreText.text = "Game Over\nScore: " + score;
+
+        // optionally pause the game
+        if (pauseOnGameOver)
+            Time.timeScale = 0f;
+
+        // optionally disable player to stop further movement/logic
+        if (player != null)
+            player.SetActive(false);
     }
 }
