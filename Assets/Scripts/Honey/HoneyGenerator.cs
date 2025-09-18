@@ -42,6 +42,10 @@ public class HoneyGenerator : MonoBehaviour
     private int currentTopRow;
     public int visibleRows = 3; // how many rows to keep at once
 
+    float honeyRiseRate = 0.001f;
+    float minLevelBelowPlayer = 15f;
+    private float averageHoneyLevel;
+
     void Awake()
     {
         Init();
@@ -50,6 +54,7 @@ public class HoneyGenerator : MonoBehaviour
 
     void Start()
     {
+        averageHoneyLevel = 0f;
         chunks = new Dictionary<Vector2Int, HoneyChunk>();
         currentTopRow = 0;
 
@@ -61,6 +66,15 @@ public class HoneyGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (player.transform.position.y - averageHoneyLevel > minLevelBelowPlayer)
+        {
+            averageHoneyLevel += 0.1f; // speed up until reaches min level
+        }
+        else
+        {
+            averageHoneyLevel += honeyRiseRate;
+        }
+
         if (Time.time > nextUpdateTime && chunks.Count != 0)
         {
             PrepareBuffers();
@@ -246,10 +260,11 @@ public class HoneyGenerator : MonoBehaviour
 
     private void UpdateChunkMesh(HoneyChunk chunk)
     {
-        // chunks.First().Value.bounds.min.y
+        float worldMinY = chunks.First().Value.bounds.min.y;
+        float worldMaxY = chunks.Last().Value.bounds.max.y;
 
-        worldMin = new(xRange[0], chunks.First().Value.bounds.min.y, zRange[0]);
-        worldMax = new(xRange[1], yRange[1], zRange[1]);
+        worldMin = new(xRange[0], worldMinY, zRange[0]);
+        worldMax = new(xRange[1], worldMaxY, zRange[1]);
 
         pointsBuffer = densityGenerator.Generate(
             pointsBuffer,
@@ -259,7 +274,7 @@ public class HoneyGenerator : MonoBehaviour
             chunk.bounds.size,
             chunk.bounds.center,
             chunk.voxelSize,
-            player.transform.position.y - 10f
+            averageHoneyLevel
         );
 
         ScaleBySDF(chunk);

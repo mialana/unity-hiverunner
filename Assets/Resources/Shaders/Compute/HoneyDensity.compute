@@ -13,7 +13,6 @@ float voxelSize;
 
 float time;
 float honeyHeight;
-float falloff = 2.f;
 
 float hash31(float3 p) {
     p = frac(p * 0.3183099 + 0.1);
@@ -77,42 +76,28 @@ void Density (int3 id : SV_DispatchThreadID)
     }
 
     float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
-    // ensure position is inside world bounds (use both min and max)
-    // pos = clamp(pos, worldMin, worldMax);
 
-    float heightFactor = time * 0.005f;
+    float heightDelta = honeyHeight - pos.y;
 
-    float worldHeight = max(0.0001f, worldMax.y - worldMin.y);
-    // float val = 1.f - (pos.y - worldMin.y) / worldHeight;
+    // 'falloff' controls surface thickness (bigger = softer)
+    float falloff = 15.0f; // tweak as needed
+    float baseVal = saturate(0.5f + heightDelta / falloff);
 
-    // float val = saturate(1.0 - (pos.y - honeyHeight) / falloff);
+    float finalVal = baseVal;
 
-    // float finalVal = val + heightFactor;
+    // sinusoidal noise
+    float ripple = sin(pos.x * 0.5f + time * 0.5f) *
+                   sin(pos.z * 0.7f + time * 0.5f);
+    finalVal += ripple * 0.1f;
 
-    // // Add sinusoidal noise based on position
-    // float noise = sin(pos.x * 0.5f + time * 0.5f) * sin(pos.z * 0.7f + time * 0.5f) * 0.02f;
+    // ridged noise
+    float ridged = ridgedMF((pos - 0.1f) + time * 0.1f);
+    finalVal += ridged * 0.4f;
 
-    // float ridged = ridgedMF((pos - 0.1f) + time * 0.1);
-    // finalVal += ridged * 0.2; // scale ridged noise strength
-    // finalVal += noise;
+    // Clamp to valid range
+    finalVal = clamp(finalVal, 0.0f, 1.0f);
 
-    // finalVal = clamp(finalVal, val - 0.01f, finalVal);
-    // finalVal = clamp(finalVal, 0.f, 1.f);
-
-    // float threshold = 0.25f; // Distance threshold from walls
-
-    // if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold || 
-    // abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
-    // {
-    //     finalVal = 0.0f;
-    // }
-    float finalVal;
-    if (pos.y < honeyHeight) {
-        finalVal = 1.0;
-    } else {
-        finalVal = 0.0;
-    }
-
+    // Write to index
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
     points[index] = float4(pos, finalVal);
 }
