@@ -1123,6 +1123,8 @@ MonoBehaviour:
   honeyMat: {fileID: 0}
   debugMode: 0
   visibleRows: 3
+  honeyRiseRate: 0.003
+  minLevelBelowPlayer: 15
   averageHoneyLevel: 0
 --- !u!1 &1405256629
 GameObject:

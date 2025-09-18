@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         // Retains vertical velocity while discarding x and z components
         newVelocity = Vector3.up * rb.linearVelocity.y;

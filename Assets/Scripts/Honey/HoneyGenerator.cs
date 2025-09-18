@@ -307,6 +307,11 @@ public class HoneyGenerator : MonoBehaviour
         countBuffer.GetData(triCountArray);
         int numTris = triCountArray[0];
 
+        if (numTris < 1)
+        {
+            return;
+        }
+
         // Get triangle data from shader
         Triangle[] tris = new Triangle[numTris];
         indexBuffer.GetData(tris, 0, 0, numTris);
