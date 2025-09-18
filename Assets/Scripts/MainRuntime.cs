@@ -1,9 +1,14 @@
+using TMPro;
 using UnityEngine;
 
 public class MainRuntime : MonoBehaviour
 {
     public GameObject player;
     int score;
+
+    private TMP_Text scoreText;
+
+    public GameObject scoreTextObject;
 
     [Header("Scoring Parameters")]
     // base points per second (much smaller so passive gain is slow)
@@ -26,6 +31,16 @@ public class MainRuntime : MonoBehaviour
     private float accumulatedScore = 0f;
     private int lastPlayerRow = 0;
     private float lastPeakTime = 0f;
+
+    void Awake()
+    {
+        if (scoreText == null && scoreTextObject != null)
+        {
+            scoreText = scoreTextObject.GetComponent<TMP_Text>();
+            if (scoreText == null)
+                scoreText = scoreTextObject.GetComponentInChildren<TMP_Text>();
+        }
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -91,6 +106,14 @@ public class MainRuntime : MonoBehaviour
         int newScore = Mathf.FloorToInt(accumulatedScore);
         if (newScore != score)
             score = newScore;
+
+        // write to UI (TextMeshPro) if assigned
+        if (scoreText != null)
+        {
+            string s = "Score: " + score;
+            if (scoreText.text != s)
+                scoreText.text = s;
+        }
 
         // Debug.Log(score);
     }
