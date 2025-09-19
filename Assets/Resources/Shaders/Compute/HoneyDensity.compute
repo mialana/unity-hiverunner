@@ -77,7 +77,7 @@ void Density (int3 id : SV_DispatchThreadID)
 
     float3 pos = chunkCenter + id * voxelSize - chunkSize / 2;
 
-    float heightDelta = honeyHeight - pos.y;
+    float heightDelta = honeyHeight - (pos.y-3.f);
 
     // 'falloff' controls surface thickness (bigger = softer)
     float falloff = 15.0f; // tweak as needed
@@ -96,6 +96,14 @@ void Density (int3 id : SV_DispatchThreadID)
 
     // Clamp to valid range
     finalVal = clamp(finalVal, 0.0f, 1.0f);
+
+    float threshold = 0.25f; // Density at world walls is always 0.f
+
+    if (abs(pos.x - worldMin.x) < threshold || abs(pos.x - worldMax.x) < threshold || 
+    abs(pos.z - worldMin.z) < threshold || abs(pos.z - worldMax.z) < threshold)
+    {
+        finalVal = 0.0f;
+    }
 
     // Write to index
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);

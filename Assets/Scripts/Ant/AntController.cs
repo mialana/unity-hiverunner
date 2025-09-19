@@ -32,12 +32,17 @@ public class PlayerController : MonoBehaviour
 
     Vector3 rotation;
 
+    private AudioSource audioSource;
+    public AudioClip jumpClip;
+
     void Awake()
     {
         mesh = transform.Find("ctrl_global").gameObject;
         controller = transform.Find("cuerpo_LP").gameObject;
 
         rotation = new Vector3(0f, 90f, 0f);
+
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -52,6 +57,21 @@ public class PlayerController : MonoBehaviour
     }
 
     // Update is called once per frame
+    void Update()
+    {
+        if (isGrounded)
+        {
+            if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
+            {
+                newVelocity.y = jumpSpeed;
+                isJumping = true;
+                audioSource.PlayOneShot(jumpClip);
+
+                rb.AddForce(new Vector3(0f, jumpSpeed, 0f), ForceMode.Impulse);
+            }
+        }
+    }
+
     void FixedUpdate()
     {
         // Retains vertical velocity while discarding x and z components
@@ -71,15 +91,6 @@ public class PlayerController : MonoBehaviour
 
         mesh.transform.localEulerAngles = rotation;
         controller.transform.localEulerAngles = rotation;
-
-        if (isGrounded)
-        {
-            if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
-            {
-                newVelocity.y = jumpSpeed;
-                isJumping = true;
-            }
-        }
 
         rb.linearVelocity = transform.TransformDirection(newVelocity);
     }

@@ -24,8 +24,10 @@ public class HiveGenerator : MonoBehaviour
     int lastBridgeCol = -1;
     int lastBridgeDir = -1; // 0 = topLeft, 1 = topRight
 
+    public bool randomizeSeed = false;
     public int seed = 12345; // exposed in inspector
     private System.Random rng; // local PRNG
+
 
     void Awake()
     {
@@ -45,6 +47,10 @@ public class HiveGenerator : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        if (randomizeSeed)
+        {
+            seed = Random.Range(0, 10000);
+        }
         rng = new System.Random(seed);
         GenerateHive();
     }

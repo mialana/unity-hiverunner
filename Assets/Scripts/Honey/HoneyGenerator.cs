@@ -54,7 +54,6 @@ public class HoneyGenerator : MonoBehaviour
 
     void Start()
     {
-        averageHoneyLevel = 0f;
         chunks = new Dictionary<Vector2Int, HoneyChunk>();
         currentTopRow = 0;
 
@@ -66,14 +65,18 @@ public class HoneyGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Time.time < 5f)
+        { // delay honey rising for a bit 
+            return;
+        }
         if (player.transform.position.y - averageHoneyLevel > minLevelBelowPlayer)
-        {
-            averageHoneyLevel += 0.1f; // speed up until reaches min level
-        }
-        else
-        {
-            averageHoneyLevel += honeyRiseRate;
-        }
+            {
+                averageHoneyLevel += 0.1f; // speed up until reaches min level
+            }
+            else
+            {
+                averageHoneyLevel += honeyRiseRate;
+            }
 
         if (Time.time > nextUpdateTime && chunks.Count != 0)
         {

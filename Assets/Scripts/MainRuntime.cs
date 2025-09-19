@@ -141,8 +141,6 @@ public class MainRuntime : MonoBehaviour
         {
             TriggerGameOver();
         }
-
-        // Debug.Log(score);
     }
 
     // Called once when game over condition is detected
@@ -154,12 +152,7 @@ public class MainRuntime : MonoBehaviour
         if (scoreText != null)
             scoreText.text = "Game Over\nScore: " + score;
 
-        // optionally pause the game
-        if (pauseOnGameOver)
-            Time.timeScale = 0f;
-
-        // optionally disable player to stop further movement/logic
-        if (player != null)
-            player.SetActive(false);
+        Time.timeScale = 0f;
+        player.SetActive(false);
     }
 }
