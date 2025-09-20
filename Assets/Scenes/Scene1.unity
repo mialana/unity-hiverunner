@@ -520,6 +520,7 @@ MonoBehaviour:
   maxFov: 100
   sensitivity: 20
   jumpClip: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
+  hitClip: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
 --- !u!54 &390303875
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -581,7 +582,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.75
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -693,7 +694,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &656102285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1397,7 +1398,7 @@ MonoBehaviour:
   yRange: {x: 0, y: 50}
   zRange: {x: -10, y: 10}
   isoLevel: 0.9
-  voxelSize: 1
+  voxelSize: 0.35
   updateInterval: 0.25
   densityGenerator: {fileID: 0}
   chunkHolder: {fileID: 0}
@@ -1407,7 +1408,7 @@ MonoBehaviour:
   honeyMat: {fileID: 0}
   debugMode: 0
   visibleRows: 3
-  honeyRiseRate: 0.05
+  honeyRiseRate: 0.01
   minLevelBelowPlayer: 15
   averageHoneyLevel: 0
 --- !u!1 &1405256629

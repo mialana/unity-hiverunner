@@ -72,7 +72,7 @@ public class HoneyGenerator : MonoBehaviour
         }
         if (player.transform.position.y - averageHoneyLevel > minLevelBelowPlayer)
         {
-            averageHoneyLevel += 0.1f; // speed up until reaches min level
+            averageHoneyLevel += Mathf.Min(honeyRiseRate * 3f, 0.1f); // speed up until reaches min level
         }
         else
         {

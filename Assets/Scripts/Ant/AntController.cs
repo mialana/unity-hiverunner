@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class AntController : MonoBehaviour
 {
     [Header("References")]
     private Rigidbody rb;
@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
 
     private AudioSource audioSource;
     public AudioClip jumpClip;
+    public AudioClip hitClip;
 
     void Awake()
     {

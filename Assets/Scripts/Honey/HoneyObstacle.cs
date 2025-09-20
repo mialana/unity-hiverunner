@@ -4,6 +4,8 @@ using UnityEngine;
 public class HoneyObstacle : MonoBehaviour
 {
     public GameObject player;
+    public AudioSource audioSource;
+    public AntController antController;
     public float honeyAmount = 5f;
 
     // Mesh generation properties
@@ -39,6 +41,9 @@ public class HoneyObstacle : MonoBehaviour
     public Vector4[] densityValues;
 
     public bool debugMode = false;
+
+    float rotation = 0f;
+    private float rotationRate = 0.003f;
 
     void Awake()
     {
@@ -83,7 +88,16 @@ public class HoneyObstacle : MonoBehaviour
     {
         meshRenderer.material = obstacleMaterial;
 
+        antController = player.GetComponent<AntController>();
+        audioSource = player.GetComponent<AudioSource>();
+
         GenerateMesh();
+    }
+
+    void FixedUpdate()
+    {
+        rotation += rotationRate;
+        transform.rotation = transform.rotation * Quaternion.Euler(0, rotation, 0);
     }
 
     void OnDestroy()
@@ -93,8 +107,9 @@ public class HoneyObstacle : MonoBehaviour
 
     void OnCollisionEnter(Collision other)
     {
-        if (other.gameObject == player)
+        if (other.gameObject == player.gameObject)
         {
+            audioSource.PlayOneShot(antController.hitClip);
             honeyGenerator.averageHoneyLevel -= honeyAmount;
             Destroy(gameObject);
         }
