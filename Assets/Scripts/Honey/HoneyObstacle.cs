@@ -70,7 +70,7 @@ public class HoneyObstacle : MonoBehaviour
         voxelsPerAxis[1] = Mathf.CeilToInt(radius.y / voxelSize) + 1;
         voxelsPerAxis[2] = Mathf.CeilToInt(radius.z / voxelSize) + 1;
 
-        honeyAmount = randomRadius;
+        honeyAmount = Mathf.Min(randomRadius * 0.25f, 0.5f);
 
         if (debugMode)
         { // Initialize densityValues array based Range.on the number of voxels

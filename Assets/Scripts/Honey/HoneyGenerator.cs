@@ -66,7 +66,7 @@ public class HoneyGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Time.time < 5f)
+        if (Time.time < 3f)
         { // delay honey rising for a bit
             return;
         }

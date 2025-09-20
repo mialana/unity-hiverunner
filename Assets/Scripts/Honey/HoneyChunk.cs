@@ -26,6 +26,9 @@ public class HoneyChunk : MonoBehaviour
     public GameObject player;
 
     public Vector2 obstacleZRange;
+    private bool obstaclesGenerated = false;
+
+    private HoneyGenerator honeyGenerator;
 
     void Awake()
     {
@@ -34,6 +37,8 @@ public class HoneyChunk : MonoBehaviour
             .GetComponent<HiveGenerator>()
             .bounds;
         obstacleZRange = new(hiveGeneratorBounds.min.z, hiveGeneratorBounds.max.z);
+
+        honeyGenerator = GameObject.Find("HoneyGenerator").GetComponent<HoneyGenerator>();
     }
 
     // Call after bounds are set
@@ -82,6 +87,22 @@ public class HoneyChunk : MonoBehaviour
             // Initialize densityValues array based on the number of voxels
             int totalVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
             densityValues = new Vector4[totalVoxels];
+        }
+    }
+
+    void Update()
+    {
+        if (honeyGenerator.averageHoneyLevel >= bounds.max.y)
+        {
+            foreach (GameObject obstacleObj in honeyObstacles)
+            {
+                Destroy(obstacleObj);
+            }
+        }
+        if (player.transform.position.y >= bounds.min.y - 5f && !obstaclesGenerated)
+        {
+            GenerateObstacles();
+            obstaclesGenerated = true;
         }
     }
 
@@ -141,8 +162,6 @@ public class HoneyChunk : MonoBehaviour
             colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
             colliderIndices.SetData(allIndices);
         }
-
-        GenerateObstacles();
     }
 
     private void ReleaseComputeBuffers()

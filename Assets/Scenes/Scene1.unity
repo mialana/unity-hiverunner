@@ -693,7 +693,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &656102285
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1397,7 +1397,7 @@ MonoBehaviour:
   yRange: {x: 0, y: 50}
   zRange: {x: -10, y: 10}
   isoLevel: 0.9
-  voxelSize: 0.25
+  voxelSize: 1
   updateInterval: 0.25
   densityGenerator: {fileID: 0}
   chunkHolder: {fileID: 0}
@@ -1407,7 +1407,7 @@ MonoBehaviour:
   honeyMat: {fileID: 0}
   debugMode: 0
   visibleRows: 3
-  honeyRiseRate: 0.005
+  honeyRiseRate: 0.05
   minLevelBelowPlayer: 15
   averageHoneyLevel: 0
 --- !u!1 &1405256629
@@ -1674,7 +1674,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 390303869}
   hiveCellPrefab: {fileID: 919132149155446097, guid: 374de7bb48fd2bea9b41e94dc15895ca, type: 3}
-  rows: 5
+  rows: 4
   cullDistance: 2
   bufferRows: 2
   randomizeSeed: 1
