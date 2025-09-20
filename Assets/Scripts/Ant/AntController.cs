@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     public Camera antCamera;
 
+    public HiveGenerator hiveGenerator;
+
     [Header("Configurations")]
     public float walkSpeed = 5f;
     public float runSpeed = 7f;
@@ -43,6 +45,11 @@ public class PlayerController : MonoBehaviour
         rotation = new Vector3(0f, 90f, 0f);
 
         audioSource = GetComponent<AudioSource>();
+
+        if (hiveGenerator == null)
+        {
+            hiveGenerator = GameObject.Find("HiveGenerator").GetComponent<HiveGenerator>();
+        }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -67,7 +74,7 @@ public class PlayerController : MonoBehaviour
                 isJumping = true;
                 audioSource.PlayOneShot(jumpClip);
 
-                rb.AddForce(new Vector3(0f, jumpSpeed, 0f), ForceMode.Impulse);
+                rb.AddForce(newVelocity, ForceMode.Impulse);
             }
         }
     }
@@ -91,6 +98,11 @@ public class PlayerController : MonoBehaviour
 
         mesh.transform.localEulerAngles = rotation;
         controller.transform.localEulerAngles = rotation;
+
+        if (!hiveGenerator.bounds.Contains(transform.position))
+        {
+            newVelocity.z = 5f;
+        }
 
         rb.linearVelocity = transform.TransformDirection(newVelocity);
     }
@@ -142,12 +154,33 @@ public class PlayerController : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        isGrounded = true;
-        isJumping = false;
+        if (col.collider is MeshCollider)
+        {
+            isGrounded = true;
+            isJumping = false;
+        }
     }
 
     void OnCollisionExit(Collision col)
     {
         isGrounded = false;
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        rb.linearVelocity = Vector3.zero;
+        Debug.Log("enter");
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        rb.linearVelocity = Vector3.zero;
+        Debug.Log("stay");
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        rb.linearVelocity = Vector3.zero;
+        Debug.Log("stay");
     }
 }

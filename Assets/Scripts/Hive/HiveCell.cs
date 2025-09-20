@@ -11,10 +11,14 @@ public class HiveCell : MonoBehaviour
     Material hiveMat;
     Material hiveMatBack;
 
+    public Bounds bounds;
+
     void Awake()
     {
         hiveMat = Resources.Load("Materials/HiveMat", typeof(Material)) as Material;
         hiveMatBack = Resources.Load("Materials/HiveMatBack", typeof(Material)) as Material;
+
+        bounds = new Bounds(transform.position, Vector3.one);
     }
 
     public void Init(int r, int c)
@@ -30,13 +34,18 @@ public class HiveCell : MonoBehaviour
         walls[4] = transform.Find("geo_downLeft").gameObject;
         walls[5] = transform.Find("geo_upLeft").gameObject;
 
+        MeshRenderer currRenderer;
         foreach (GameObject w in walls)
         {
-            w.GetComponent<MeshRenderer>().material = hiveMat;
+            currRenderer = w.GetComponent<MeshRenderer>();
+            currRenderer.material = hiveMat;
+            bounds.Encapsulate(currRenderer.bounds);
         }
 
         GameObject backWall = transform.Find("geo_back").gameObject;
-        backWall.GetComponent<MeshRenderer>().material = hiveMatBack;
+        currRenderer = backWall.GetComponent<MeshRenderer>();
+        currRenderer.material = hiveMatBack;
+        bounds.Encapsulate(currRenderer.bounds);
     }
 
     public void SetWall(int dir, bool active)

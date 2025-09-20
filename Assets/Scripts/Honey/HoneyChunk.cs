@@ -21,9 +21,24 @@ public class HoneyChunk : MonoBehaviour
     public MeshCollider meshCollider;
     public Vector4[] densityValues;
 
-    // Call after bounds are set
-    public void SetUp(Material mat, bool debugMode)
+    public List<GameObject> honeyObstacles = new();
+    public GameObject honeyObstaclePrefab;
+    public GameObject player;
+
+    public Vector2 obstacleZRange;
+
+    void Awake()
     {
+        obstacleZRange = new(-2.5f, 2.5f);
+        honeyObstaclePrefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        honeyObstaclePrefab.transform.localScale *= 2f;
+    }
+
+    // Call after bounds are set
+    public void SetUp(GameObject player, Material mat, bool debugMode)
+    {
+        this.player = player;
+
         Vector3 size = bounds.size;
         voxelsPerAxis[0] = Mathf.CeilToInt(size.x / voxelSize) + 1;
         voxelsPerAxis[1] = Mathf.CeilToInt(size.y / voxelSize) + 1;
@@ -66,6 +81,8 @@ public class HoneyChunk : MonoBehaviour
             int totalVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
             densityValues = new Vector4[totalVoxels];
         }
+
+        GenerateObstacles();
     }
 
     // Update is called once per frame
@@ -81,8 +98,8 @@ public class HoneyChunk : MonoBehaviour
 
     private void BuildComputeBuffers()
     {
-        List<Vector3> allVertices = new List<Vector3>();
-        List<int> allIndices = new List<int>();
+        List<Vector3> allVertices = new();
+        List<int> allIndices = new();
         int vertexOffset = 0;
 
         foreach (Collider collider in colliders)
@@ -140,7 +157,11 @@ public class HoneyChunk : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.white;
-        Gizmos.DrawWireCube(bounds.center, bounds.size);
+
+        Vector3 gizmosSize = bounds.size;
+        gizmosSize.z = obstacleZRange.y - obstacleZRange.x;
+
+        Gizmos.DrawWireCube(bounds.center, gizmosSize);
 
         if (densityValues == null || densityValues.Length == 0)
         {
@@ -173,5 +194,32 @@ public class HoneyChunk : MonoBehaviour
     public void OnApplicationQuit()
     {
         DestroyImmediate(gameObject, false);
+    }
+
+    public void GenerateObstacles()
+    {
+        int obstacleCount = Random.Range(3, 6);
+        for (int i = 0; i < obstacleCount; i++)
+        {
+            Vector3 randomPos = new(
+                Random.Range(bounds.min.x, bounds.max.x),
+                Random.Range(bounds.min.y, bounds.max.y),
+                Random.Range(bounds.min.z, bounds.max.z)
+            );
+            GameObject obstacle = Instantiate(
+                honeyObstaclePrefab,
+                randomPos,
+                Quaternion.identity,
+                transform
+            );
+
+            obstacle.name = $"Honey Obstacle {i}";
+            obstacle.transform.parent = transform;
+
+            HoneyObstacle obstacleScript = obstacle.AddComponent<HoneyObstacle>();
+            if (obstacleScript != null)
+                obstacleScript.player = player;
+            honeyObstacles.Add(obstacle);
+        }
     }
 }

@@ -27,6 +27,7 @@ public class HoneyGenerator : MonoBehaviour
     public GameObject chunkHolder;
     public ComputeShader marchingCubesShader;
     public ComputeShader signedDistanceFieldShader;
+    public ComputeShader honeyObstacleDensityShader;
     public Material honeyMat;
 
     public bool debugMode = true;
@@ -66,17 +67,17 @@ public class HoneyGenerator : MonoBehaviour
     void Update()
     {
         if (Time.time < 5f)
-        { // delay honey rising for a bit 
+        { // delay honey rising for a bit
             return;
         }
         if (player.transform.position.y - averageHoneyLevel > minLevelBelowPlayer)
-            {
-                averageHoneyLevel += 0.1f; // speed up until reaches min level
-            }
-            else
-            {
-                averageHoneyLevel += honeyRiseRate;
-            }
+        {
+            averageHoneyLevel += 0.1f; // speed up until reaches min level
+        }
+        else
+        {
+            averageHoneyLevel += honeyRiseRate;
+        }
 
         if (Time.time > nextUpdateTime && chunks.Count != 0)
         {
@@ -162,6 +163,12 @@ public class HoneyGenerator : MonoBehaviour
                 Resources.Load("Shaders/Compute/SignedDistanceField", typeof(ComputeShader))
                 as ComputeShader;
         }
+        if (honeyObstacleDensityShader == null)
+        {
+            honeyObstacleDensityShader =
+                Resources.Load("Shaders/Compute/HoneyObstacleDensity", typeof(ComputeShader))
+                as ComputeShader;
+        }
     }
 
     private void CreateInitialChunks()
@@ -233,7 +240,7 @@ public class HoneyGenerator : MonoBehaviour
 
         newChunk.voxelSize = voxelSize;
 
-        newChunk.SetUp(honeyMat, debugMode);
+        newChunk.SetUp(player, honeyMat, debugMode);
 
         chunks[coord] = newChunk;
     }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class HiveGenerator : MonoBehaviour
@@ -28,6 +29,7 @@ public class HiveGenerator : MonoBehaviour
     public int seed = 12345; // exposed in inspector
     private System.Random rng; // local PRNG
 
+    public Bounds bounds;
 
     void Awake()
     {
@@ -42,6 +44,8 @@ public class HiveGenerator : MonoBehaviour
                 cellHolder = new GameObject("CellHolder");
             }
         }
+
+        bounds = new Bounds();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -127,6 +131,8 @@ public class HiveGenerator : MonoBehaviour
 
             HiveCell cell = obj.GetComponent<HiveCell>() ?? obj.AddComponent<HiveCell>();
             cell.Init(r, c);
+
+            bounds.Encapsulate(cell.bounds);
 
             cells[new Vector2Int(r, c)] = cell;
 
@@ -229,5 +235,12 @@ public class HiveGenerator : MonoBehaviour
         }
 
         return new Vector3(x, y, 0f);
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+
+        Gizmos.DrawWireCube(bounds.center, bounds.size);
     }
 }
