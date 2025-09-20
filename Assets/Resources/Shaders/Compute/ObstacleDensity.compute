@@ -11,8 +11,9 @@ float3 chunkCenter;
 float voxelSize;
 
 float time;
-float radius;
+float3 radius;
 float noiseScale;
+float noiseWeight;
 
 // Simple noise function
 float hash31(float3 p) {
@@ -45,19 +46,19 @@ void Density (int3 id : SV_DispatchThreadID)
     // This calculates position relative to chunk bounds, not centered at chunkCenter
     float3 pos = worldMin + (id / voxelsPerAxis) * (worldMax - worldMin);
 
-    // Distance from voxel position to obstacle center (chunkCenter)
-    float dist = length(pos - chunkCenter);
+    // Compute delta from chunk center
+    float3 delta = pos - chunkCenter;
+    // Calculate cylinder falloff in xy-plane using radius.x and radius.y
+    float2 dxy = delta.xy / float2(radius.x, radius.y);
+    float cylinder = 1.0 - saturate(length(dxy));
+    
+    if (abs(delta.z) >= radius.z - (voxelSize + 0.001f))
+    {
+        cylinder = 0.0;
+    }
 
-    // Base density: 1 at center, smoothly drops to 0 at radius
-    float density = max(0.0, 1.0 - (dist / radius));
-
-    // Add some noise to make it blobby
-    float noiseVal = noise((pos - chunkCenter) * noiseScale + float3(time * 0.1, time * 0.2, time * 0.15));
-
-    // Apply noise to distort the sphere
-    density += (noiseVal - 0.5) * 0.3;
-
-    // Ensure density is within valid range
+    float n = noise(pos * noiseScale);
+    float density = cylinder + noiseWeight * (n - 0.5); // remap to [-0.5, 0.5]
     density = saturate(density);
 
     int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);

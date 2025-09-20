@@ -16,9 +16,12 @@ public class HoneyObstacle : MonoBehaviour
     private HoneyGenerator honeyGenerator;
 
     // Marching cubes settings
-    public float voxelSize = 1f;
-    public float radius = 5f;
-    public float noiseScale = 0.5f;
+    public float voxelSize = 0.25f;
+    public Vector3 radius = new Vector3(5f, 5f, 0.5f);
+    public Vector2 sizeRange = new(2, 5);
+
+    public float noiseScale = 1f;
+    public float noiseWeight = 0.5f;
     public float isoLevel = 0.5f;
     public Vector3Int voxelsPerAxis;
     public Material obstacleMaterial;
@@ -57,11 +60,18 @@ public class HoneyObstacle : MonoBehaviour
             meshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         }
 
-        int numVoxels = Mathf.CeilToInt(radius / voxelSize) + 1;
-        voxelsPerAxis = new(numVoxels, numVoxels, numVoxels);
+        float randomRadius = UnityEngine.Random.Range(sizeRange.x, sizeRange.y);
+        radius.x = randomRadius;
+        radius.y = randomRadius;
+
+        voxelsPerAxis[0] = Mathf.CeilToInt(radius.x / voxelSize) + 1;
+        voxelsPerAxis[1] = Mathf.CeilToInt(radius.y / voxelSize) + 1;
+        voxelsPerAxis[2] = Mathf.CeilToInt(radius.z / voxelSize) + 1;
+
+        honeyAmount = randomRadius;
 
         if (debugMode)
-        { // Initialize densityValues array based on the number of voxels
+        { // Initialize densityValues array based Range.on the number of voxels
             int totalVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
             densityValues = new Vector4[totalVoxels];
         }
@@ -94,8 +104,7 @@ public class HoneyObstacle : MonoBehaviour
     {
         PrepareBuffers();
 
-        // Calculate bounds
-        Vector3 chunkSize = Vector3.one * radius * 2;
+        Vector3 chunkSize = radius * 2;
         Vector3 chunkCenter = transform.position;
 
         pointsBuffer = densityGenerator.Generate(
@@ -107,7 +116,8 @@ public class HoneyObstacle : MonoBehaviour
             chunkCenter,
             voxelSize,
             radius,
-            noiseScale
+            noiseScale,
+            noiseWeight
         );
 
         if (debugMode)

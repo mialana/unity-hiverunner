@@ -22,8 +22,9 @@ public class ObstacleDensity : BaseDensityGenerator
         Vector3 chunkSize,
         Vector3 chunkCenter,
         float voxelSize,
-        float radius,
-        float noiseScale
+        Vector3 radius,
+        float noiseScale,
+        float noiseWeight
     )
     {
         buffersToRelease = new List<ComputeBuffer>();
@@ -31,8 +32,9 @@ public class ObstacleDensity : BaseDensityGenerator
         float time = Time.time;
 
         densityShader.SetFloat("time", time);
-        densityShader.SetFloat("radius", radius);
+        densityShader.SetVector("radius", radius);
         densityShader.SetFloat("noiseScale", noiseScale);
+        densityShader.SetFloat("noiseWeight", noiseWeight);
 
         return base.Generate(
             pointsBuffer,
