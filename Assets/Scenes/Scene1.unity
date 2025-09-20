@@ -1407,7 +1407,7 @@ MonoBehaviour:
   honeyObstacleDensityShader: {fileID: 0}
   honeyMat: {fileID: 0}
   debugMode: 0
-  visibleRows: 3
+  visibleRows: 4
   honeyRiseRate: 0.01
   minLevelBelowPlayer: 15
   averageHoneyLevel: 0
