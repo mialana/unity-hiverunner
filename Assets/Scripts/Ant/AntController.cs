@@ -73,7 +73,7 @@ public class AntController : MonoBehaviour
             {
                 newVelocity.y = jumpSpeed;
                 isJumping = true;
-                audioSource.PlayOneShot(jumpClip);
+                audioSource.PlayOneShot(jumpClip, 2f);
 
                 rb.AddForce(newVelocity, ForceMode.Impulse);
             }
@@ -165,23 +165,5 @@ public class AntController : MonoBehaviour
     void OnCollisionExit(Collision col)
     {
         isGrounded = false;
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        rb.linearVelocity = Vector3.zero;
-        Debug.Log("enter");
-    }
-
-    void OnTriggerStay(Collider other)
-    {
-        rb.linearVelocity = Vector3.zero;
-        Debug.Log("stay");
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        rb.linearVelocity = Vector3.zero;
-        Debug.Log("stay");
     }
 }

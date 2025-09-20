@@ -109,7 +109,7 @@ public class HoneyObstacle : MonoBehaviour
     {
         if (other.gameObject == player.gameObject)
         {
-            audioSource.PlayOneShot(antController.hitClip);
+            audioSource.PlayOneShot(antController.hitClip, 0.5f);
             honeyGenerator.averageHoneyLevel -= honeyAmount;
             Destroy(gameObject);
         }
