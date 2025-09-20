@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
@@ -16,11 +15,13 @@ public class HoneyObstacle : MonoBehaviour
     private HoneyGenerator honeyGenerator;
 
     // Marching cubes settings
-    public float voxelSize = 0.25f;
-    public Vector3 radius = new Vector3(5f, 5f, 0.5f);
+    public float voxelSize = 0.35f;
+    public Vector3 radius = new Vector3(5f, 5f, 0.65f);
     public Vector2 sizeRange = new(2, 5);
 
-    public float noiseScale = 1f;
+    public Vector2 randomRotationRange = new(-30, 30);
+
+    public float noiseScale = 0.75f;
     public float noiseWeight = 0.5f;
     public float isoLevel = 0.5f;
     public Vector3Int voxelsPerAxis;
@@ -60,7 +61,7 @@ public class HoneyObstacle : MonoBehaviour
             meshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         }
 
-        float randomRadius = UnityEngine.Random.Range(sizeRange.x, sizeRange.y);
+        float randomRadius = Random.Range(sizeRange.x, sizeRange.y);
         radius.x = randomRadius;
         radius.y = randomRadius;
 
@@ -178,6 +179,15 @@ public class HoneyObstacle : MonoBehaviour
 
         // Update collider
         meshCollider.sharedMesh = mesh;
+
+        // Apply a slight random rotation offset from the current rotation
+        transform.rotation =
+            transform.rotation
+            * Quaternion.Euler(
+                Random.Range(randomRotationRange.x, randomRotationRange.y),
+                Random.Range(randomRotationRange.x, randomRotationRange.y),
+                Random.Range(randomRotationRange.x, randomRotationRange.y)
+            );
     }
 
     void PrepareBuffers()

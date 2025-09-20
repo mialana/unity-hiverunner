@@ -52,7 +52,7 @@ void Density (int3 id : SV_DispatchThreadID)
     float2 dxy = delta.xy / float2(radius.x, radius.y);
     float cylinder = 1.0 - saturate(length(dxy));
     
-    if (abs(delta.z) >= radius.z - (voxelSize + 0.001f))
+    if (abs(delta.z) >= radius.z - (0.001f))
     {
         cylinder = 0.0;
     }
