@@ -30,8 +30,6 @@ public class HoneyChunk : MonoBehaviour
     void Awake()
     {
         obstacleZRange = new(-2.5f, 2.5f);
-        honeyObstaclePrefab = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        honeyObstaclePrefab.transform.localScale *= 2f;
     }
 
     // Call after bounds are set
@@ -206,14 +204,10 @@ public class HoneyChunk : MonoBehaviour
                 Random.Range(bounds.min.y, bounds.max.y),
                 Random.Range(bounds.min.z, bounds.max.z)
             );
-            GameObject obstacle = Instantiate(
-                honeyObstaclePrefab,
-                randomPos,
-                Quaternion.identity,
-                transform
-            );
-
+            GameObject obstacle = new();
             obstacle.name = $"Honey Obstacle {i}";
+
+            obstacle.transform.SetLocalPositionAndRotation(randomPos, Quaternion.identity);
             obstacle.transform.parent = transform;
 
             HoneyObstacle obstacleScript = obstacle.AddComponent<HoneyObstacle>();

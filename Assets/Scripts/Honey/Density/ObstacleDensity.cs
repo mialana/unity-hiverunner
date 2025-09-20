@@ -1,12 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HoneyDensity : BaseDensityGenerator
+public class ObstacleDensity : BaseDensityGenerator
 {
     void Awake()
     {
         densityShader =
-            Resources.Load("Shaders/Compute/HoneyDensity", typeof(ComputeShader)) as ComputeShader;
+            Resources.Load("Shaders/Compute/ObstacleDensity", typeof(ComputeShader))
+            as ComputeShader;
+        if (densityShader == null)
+        {
+            Debug.LogError("Failed to load ObstacleDensity compute shader!");
+        }
     }
 
     public ComputeBuffer Generate(
@@ -17,7 +22,8 @@ public class HoneyDensity : BaseDensityGenerator
         Vector3 chunkSize,
         Vector3 chunkCenter,
         float voxelSize,
-        float honeyHeight
+        float radius,
+        float noiseScale
     )
     {
         buffersToRelease = new List<ComputeBuffer>();
@@ -25,7 +31,8 @@ public class HoneyDensity : BaseDensityGenerator
         float time = Time.time;
 
         densityShader.SetFloat("time", time);
-        densityShader.SetFloat("honeyHeight", honeyHeight); // <-- pass in
+        densityShader.SetFloat("radius", radius);
+        densityShader.SetFloat("noiseScale", noiseScale);
 
         return base.Generate(
             pointsBuffer,

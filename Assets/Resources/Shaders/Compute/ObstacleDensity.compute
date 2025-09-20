@@ -1,0 +1,69 @@
+#pragma kernel Density
+
+#include "Common.hlsl"
+
+RWStructuredBuffer<float4> points;
+float3 voxelsPerAxis;
+float3 worldMin;
+float3 worldMax;
+float3 chunkSize;
+float3 chunkCenter;
+float voxelSize;
+
+float time;
+float radius;
+float noiseScale;
+
+// Simple noise function
+float hash31(float3 p) {
+    p = frac(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float noise(float3 p) {
+    float3 i = floor(p);
+    float3 f = frac(p);
+
+    float3 u = f * f * (3.0 - 2.0 * f);
+
+    return lerp(
+    lerp(lerp(hash31(i + float3(0, 0, 0)), hash31(i + float3(1, 0, 0)), u.x),
+    lerp(hash31(i + float3(0, 1, 0)), hash31(i + float3(1, 1, 0)), u.x), u.y),
+    lerp(lerp(hash31(i + float3(0, 0, 1)), hash31(i + float3(1, 0, 1)), u.x),
+    lerp(hash31(i + float3(0, 1, 1)), hash31(i + float3(1, 1, 1)), u.x), u.y), u.z);
+}
+
+[numthreads(blockSize, blockSize, blockSize)]
+void Density (int3 id : SV_DispatchThreadID)
+{
+    if (id.x >= voxelsPerAxis[0] || id.y >= voxelsPerAxis[1] || id.z >= voxelsPerAxis[2]) {
+        return;
+    }
+
+    // Calculate world position of this voxel
+    // This calculates position relative to chunk bounds, not centered at chunkCenter
+    float3 pos = float3(
+        worldMin.x + (id.x / voxelsPerAxis.x) * (worldMax.x - worldMin.x),
+        worldMin.y + (id.y / voxelsPerAxis.y) * (worldMax.y - worldMin.y),
+        worldMin.z + (id.z / voxelsPerAxis.z) * (worldMax.z - worldMin.z)
+    );
+    
+    // Distance from voxel position to obstacle center (chunkCenter)
+    float dist = length(pos - chunkCenter);
+    
+    // Base density: 1 at center, smoothly drops to 0 at radius
+    float density = max(0.0, 1.0 - (dist / radius));
+    
+    // // Add some noise to make it blobby
+    // float noiseVal = noise((pos - chunkCenter) * noiseScale + float3(time * 0.1, time * 0.2, time * 0.15));
+    
+    // // Apply noise to distort the sphere
+    // density += (noiseVal - 0.5) * 0.3;
+    
+    // Ensure density is within valid range
+    density = saturate(density);
+
+    int index = indexFromCoord(id.x, id.y, id.z, voxelsPerAxis);
+    points[index] = float4(pos, density);
+}

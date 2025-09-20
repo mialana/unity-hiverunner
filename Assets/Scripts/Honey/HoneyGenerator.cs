@@ -147,7 +147,7 @@ public class HoneyGenerator : MonoBehaviour
             }
             else
             {
-                GameObject honeyDensityObj = new GameObject("HoneyDensity");
+                GameObject honeyDensityObj = new("HoneyDensity");
                 densityGenerator = honeyDensityObj.AddComponent<HoneyDensity>();
             }
         }
@@ -187,7 +187,7 @@ public class HoneyGenerator : MonoBehaviour
 
         for (int xi = 0; xi < numX; xi++)
         {
-            Vector2Int coord = new Vector2Int(xi, rowIndex);
+            Vector2Int coord = new(xi, rowIndex);
 
             if (!chunks.ContainsKey(coord))
             {
@@ -202,7 +202,7 @@ public class HoneyGenerator : MonoBehaviour
 
         for (int xi = 0; xi < numX; xi++)
         {
-            Vector2Int coord = new Vector2Int(xi, rowIndex);
+            Vector2Int coord = new(xi, rowIndex);
             if (chunks.TryGetValue(coord, out HoneyChunk chunk))
             {
                 Destroy(chunk.gameObject);
