@@ -197,6 +197,10 @@ public class HoneyChunk : MonoBehaviour
     public void GenerateObstacles()
     {
         int obstacleCount = Random.Range(3, 6);
+
+        Material obstacleMaterial =
+            Resources.Load("Materials/HoneyObstacleMat", typeof(Material)) as Material;
+
         for (int i = 0; i < obstacleCount; i++)
         {
             Vector3 randomPos = new(
@@ -204,16 +208,19 @@ public class HoneyChunk : MonoBehaviour
                 Random.Range(bounds.min.y, bounds.max.y),
                 Random.Range(bounds.min.z, bounds.max.z)
             );
-            GameObject obstacle = new();
-            obstacle.name = $"Honey Obstacle {i}";
+            GameObject obstacleObj = new();
+            obstacleObj.name = $"Honey Obstacle {i}";
 
-            obstacle.transform.SetLocalPositionAndRotation(randomPos, Quaternion.identity);
-            obstacle.transform.parent = transform;
+            obstacleObj.transform.SetLocalPositionAndRotation(randomPos, Quaternion.identity);
+            obstacleObj.transform.parent = transform;
 
-            HoneyObstacle obstacleScript = obstacle.AddComponent<HoneyObstacle>();
-            if (obstacleScript != null)
-                obstacleScript.player = player;
-            honeyObstacles.Add(obstacle);
+            honeyObstacles.Add(obstacleObj);
+
+            HoneyObstacle obstacle = obstacleObj.AddComponent<HoneyObstacle>();
+            obstacle.player = player;
+            obstacle.obstacleMaterial = obstacleMaterial;
+
+            obstacle.Init();
         }
     }
 }

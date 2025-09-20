@@ -43,24 +43,20 @@ void Density (int3 id : SV_DispatchThreadID)
 
     // Calculate world position of this voxel
     // This calculates position relative to chunk bounds, not centered at chunkCenter
-    float3 pos = float3(
-        worldMin.x + (id.x / voxelsPerAxis.x) * (worldMax.x - worldMin.x),
-        worldMin.y + (id.y / voxelsPerAxis.y) * (worldMax.y - worldMin.y),
-        worldMin.z + (id.z / voxelsPerAxis.z) * (worldMax.z - worldMin.z)
-    );
-    
+    float3 pos = worldMin + (id / voxelsPerAxis) * (worldMax - worldMin);
+
     // Distance from voxel position to obstacle center (chunkCenter)
     float dist = length(pos - chunkCenter);
-    
+
     // Base density: 1 at center, smoothly drops to 0 at radius
     float density = max(0.0, 1.0 - (dist / radius));
-    
-    // // Add some noise to make it blobby
-    // float noiseVal = noise((pos - chunkCenter) * noiseScale + float3(time * 0.1, time * 0.2, time * 0.15));
-    
-    // // Apply noise to distort the sphere
-    // density += (noiseVal - 0.5) * 0.3;
-    
+
+    // Add some noise to make it blobby
+    float noiseVal = noise((pos - chunkCenter) * noiseScale + float3(time * 0.1, time * 0.2, time * 0.15));
+
+    // Apply noise to distort the sphere
+    density += (noiseVal - 0.5) * 0.3;
+
     // Ensure density is within valid range
     density = saturate(density);
 

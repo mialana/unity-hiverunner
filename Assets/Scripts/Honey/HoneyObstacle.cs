@@ -5,7 +5,7 @@ using UnityEngine;
 public class HoneyObstacle : MonoBehaviour
 {
     public GameObject player;
-    public float honeyAmount = 10f;
+    public float honeyAmount = 5f;
 
     // Mesh generation properties
     private MeshFilter meshFilter;
@@ -13,12 +13,14 @@ public class HoneyObstacle : MonoBehaviour
     private MeshCollider meshCollider;
     private ObstacleDensity densityGenerator;
 
+    private HoneyGenerator honeyGenerator;
+
     // Marching cubes settings
     public float voxelSize = 1f;
     public float radius = 5f;
     public float noiseScale = 0.5f;
     public float isoLevel = 0.5f;
-    public Vector3Int voxelsPerAxis = new(16, 16, 16);
+    public Vector3Int voxelsPerAxis;
     public Material obstacleMaterial;
 
     // Compute buffers - similar to HoneyGenerator
@@ -30,27 +32,22 @@ public class HoneyObstacle : MonoBehaviour
 
     public Vector4[] densityValues;
 
-    public bool debugMode = true;
+    public bool debugMode = false;
 
-    private void Awake()
+    void Awake()
     {
         // Get components
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<MeshCollider>();
 
+        honeyGenerator = GameObject.Find("HoneyGenerator").GetComponent<HoneyGenerator>();
+
         densityGenerator = GameObject.Find("ObstacleDensity").GetComponent<ObstacleDensity>();
 
         // Load the marching cubes shader
         marchingCubesShader =
             Resources.Load("Shaders/Compute/MarchingCubes", typeof(ComputeShader)) as ComputeShader;
-
-        // Set material
-        if (obstacleMaterial == null)
-        {
-            obstacleMaterial = Resources.Load("Materials/HoneyMat", typeof(Material)) as Material;
-        }
-        meshRenderer.material = obstacleMaterial;
 
         // Create mesh
         if (meshFilter.sharedMesh == null)
@@ -70,26 +67,26 @@ public class HoneyObstacle : MonoBehaviour
         }
     }
 
-    private void Start()
+    public void Init()
     {
+        meshRenderer.material = obstacleMaterial;
+
         GenerateMesh();
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
         ReleaseBuffers();
     }
 
-    private void OnTriggerEnter(Collider other)
+    void OnCollisionEnter(Collision other)
     {
         if (other.gameObject == player)
         {
-            HoneyGenerator honeyGen = player.GetComponent<HoneyGenerator>();
-            if (honeyGen != null)
-            {
-                honeyGen.averageHoneyLevel -= honeyAmount;
-            }
+            honeyGenerator.averageHoneyLevel -= honeyAmount;
             Destroy(gameObject);
+
+            Debug.Log($"Honey Subtracted by {honeyAmount}!");
         }
     }
 
@@ -158,7 +155,7 @@ public class HoneyObstacle : MonoBehaviour
             for (int j = 0; j < 3; j++)
             {
                 meshTriangles[i * 3 + j] = i * 3 + j;
-                vertices[i * 3 + j] = tris[i][j];
+                vertices[i * 3 + j] = transform.InverseTransformPoint(tris[i][j]);
             }
         }
 
@@ -238,26 +235,24 @@ public class HoneyObstacle : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        if (densityValues == null || densityValues.Length == 0)
+        if (debugMode)
         {
-            return;
-        }
+            // Draw spheres to debug density
 
-        // Draw spheres to debug density
+            Color gizmosColor = Color.black;
 
-        Color gizmosColor = Color.black;
+            for (int i = 0; i < densityValues.Length; i++)
+            {
+                float density = densityValues[i].w;
 
-        for (int i = 0; i < densityValues.Length; i++)
-        {
-            float density = densityValues[i].w;
+                gizmosColor.r = density;
+                gizmosColor.g = density;
+                gizmosColor.b = density;
 
-            gizmosColor.r = density;
-            gizmosColor.g = density;
-            gizmosColor.b = density;
-
-            Gizmos.color = gizmosColor;
-            Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
-            Gizmos.DrawSphere(pos, 0.1f);
+                Gizmos.color = gizmosColor;
+                Vector3 pos = new(densityValues[i].x, densityValues[i].y, densityValues[i].z);
+                Gizmos.DrawSphere(pos, 0.1f);
+            }
         }
     }
 }
