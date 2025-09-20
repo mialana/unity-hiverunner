@@ -88,8 +88,8 @@ public class HoneyGenerator : MonoBehaviour
             int playerRow = Mathf.FloorToInt(player.transform.position.y / chunkSize.y);
 
             // Always ensure we have exactly `visibleRows` rows
-            int minRow = playerRow - 1; // keep a row below player
-            int maxRow = minRow + visibleRows - 1; // and extend upwards
+            int minRow = playerRow - 2; // keep a row below player
+            int maxRow = minRow + visibleRows - 2; // and extend upwards
 
             // Add rows above
             while (currentTopRow < maxRow)

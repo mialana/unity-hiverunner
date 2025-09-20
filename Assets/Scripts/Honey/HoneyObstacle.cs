@@ -43,7 +43,7 @@ public class HoneyObstacle : MonoBehaviour
     public bool debugMode = false;
 
     float rotation = 0f;
-    private float rotationRate = 0.003f;
+    private float rotationRate = 0.001f;
 
     void Awake()
     {
