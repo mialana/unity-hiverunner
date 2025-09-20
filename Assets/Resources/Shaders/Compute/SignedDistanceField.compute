@@ -9,6 +9,8 @@ RWStructuredBuffer<float4> points; // Voxel positions (x, y, z, value)
 RWStructuredBuffer<float3> colliderVertices; // Mesh vertices
 RWStructuredBuffer<int> colliderIndices; // Mesh triangle indices
 
+uint colliderIndicesLength;
+
 float3 voxelsPerAxis; // Number of voxels along each axis
 
 bool RayIntersectsTriangle(float3 rayOrigin, float3 rayDir,
@@ -64,7 +66,7 @@ void SDF (int3 id : SV_DispatchThreadID)
     uint intersectionCount = 0;
 
     // Iterate through all triangles in the mesh
-    for (uint i = 0; i < colliderIndices.Length; i += 3)
+    for (uint i = 0; i < colliderIndicesLength; i += 3)
     {
         // Get the triangle vertices
         float3 v0 = colliderVertices[colliderIndices[i]];

@@ -247,7 +247,12 @@ public class HoneyGenerator : MonoBehaviour
 
     private void ScaleBySDF(HoneyChunk chunk)
     {
-        if (chunk.colliderVertices == null || chunk.colliderIndices == null)
+        if (
+            chunk.colliderVertices == null
+            || chunk.colliderIndices == null
+            || chunk.colliderVertices.count == 0
+            || chunk.colliderIndices.count == 0
+        )
         {
             return;
         }
@@ -255,6 +260,8 @@ public class HoneyGenerator : MonoBehaviour
         signedDistanceFieldShader.SetBuffer(0, "points", pointsBuffer);
         signedDistanceFieldShader.SetBuffer(0, "colliderVertices", chunk.colliderVertices);
         signedDistanceFieldShader.SetBuffer(0, "colliderIndices", chunk.colliderIndices);
+
+        signedDistanceFieldShader.SetInt("colliderIndicesLength", chunk.colliderIndices.count);
 
         signedDistanceFieldShader.SetVector("voxelsPerAxis", (Vector3)chunk.voxelsPerAxis);
 
