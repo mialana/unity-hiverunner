@@ -46,11 +46,7 @@ public class HiveGenerator : MonoBehaviour
         }
 
         bounds = new Bounds();
-    }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
         if (randomizeSeed)
         {
             seed = Random.Range(0, 10000);

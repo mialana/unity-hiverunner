@@ -29,7 +29,11 @@ public class HoneyChunk : MonoBehaviour
 
     void Awake()
     {
-        obstacleZRange = new(-2.5f, 2.5f);
+        Bounds hiveGeneratorBounds = GameObject
+            .Find("HiveGenerator")
+            .GetComponent<HiveGenerator>()
+            .bounds;
+        obstacleZRange = new(hiveGeneratorBounds.min.z, hiveGeneratorBounds.max.z);
     }
 
     // Call after bounds are set
@@ -79,8 +83,6 @@ public class HoneyChunk : MonoBehaviour
             int totalVoxels = voxelsPerAxis.x * voxelsPerAxis.y * voxelsPerAxis.z;
             densityValues = new Vector4[totalVoxels];
         }
-
-        GenerateObstacles();
     }
 
     // Update is called once per frame
@@ -102,7 +104,11 @@ public class HoneyChunk : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
-            // Debug.Log(collider.name);
+            if (collider.gameObject.name == "ant")
+            {
+                continue;
+            }
+
             if (collider.gameObject.TryGetComponent<MeshFilter>(out var meshFilter))
             {
                 Mesh colliderMesh = meshFilter.sharedMesh;
@@ -135,6 +141,8 @@ public class HoneyChunk : MonoBehaviour
             colliderIndices = new ComputeBuffer(allIndices.Count, sizeof(int));
             colliderIndices.SetData(allIndices);
         }
+
+        GenerateObstacles();
     }
 
     private void ReleaseComputeBuffers()
@@ -196,7 +204,7 @@ public class HoneyChunk : MonoBehaviour
 
     public void GenerateObstacles()
     {
-        int obstacleCount = Random.Range(3, 6);
+        int obstacleCount = 3;
 
         Material obstacleMaterial =
             Resources.Load("Materials/HoneyObstacleMat", typeof(Material)) as Material;
@@ -206,7 +214,7 @@ public class HoneyChunk : MonoBehaviour
             Vector3 randomPos = new(
                 Random.Range(bounds.min.x, bounds.max.x),
                 Random.Range(bounds.min.y, bounds.max.y),
-                Random.Range(bounds.min.z, bounds.max.z)
+                Random.Range(obstacleZRange.x, obstacleZRange.y)
             );
             GameObject obstacleObj = new();
             obstacleObj.name = $"Honey Obstacle {i}";

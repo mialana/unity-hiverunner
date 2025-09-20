@@ -16,8 +16,10 @@ public class HoneyObstacle : MonoBehaviour
 
     // Marching cubes settings
     public float voxelSize = 0.35f;
-    public Vector3 radius = new Vector3(5f, 5f, 0.65f);
-    public Vector2 sizeRange = new(2, 5);
+    public Vector3 radius = new Vector3(5f, 5f, 1.5f);
+    public float finalZScale = 0.5f;
+
+    public Vector2 sizeRange = new(1, 4);
 
     public Vector2 randomRotationRange = new(-30, 30);
 
@@ -46,7 +48,6 @@ public class HoneyObstacle : MonoBehaviour
         meshCollider = GetComponent<MeshCollider>();
 
         honeyGenerator = GameObject.Find("HoneyGenerator").GetComponent<HoneyGenerator>();
-
         densityGenerator = GameObject.Find("ObstacleDensity").GetComponent<ObstacleDensity>();
 
         // Load the marching cubes shader
@@ -96,8 +97,6 @@ public class HoneyObstacle : MonoBehaviour
         {
             honeyGenerator.averageHoneyLevel -= honeyAmount;
             Destroy(gameObject);
-
-            Debug.Log($"Honey Subtracted by {honeyAmount}!");
         }
     }
 
@@ -180,6 +179,7 @@ public class HoneyObstacle : MonoBehaviour
         // Update collider
         meshCollider.sharedMesh = mesh;
 
+        transform.localScale = new(1f, 1f, 1 / (radius.z / finalZScale));
         // Apply a slight random rotation offset from the current rotation
         transform.rotation =
             transform.rotation
